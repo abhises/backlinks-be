@@ -1,6 +1,10 @@
+/// <reference types="node" />
 import "dotenv/config";
 import { defineConfig } from "prisma/config";
-import path from "path";
+
+const databaseUrl = process.env.NODE_ENV === "production"
+  ? process.env.DATABASE_URL_PROD
+  : process.env.DATABASE_URL_DEV;
 
 export default defineConfig({
   schema: "prisma/schema.prisma",
@@ -8,6 +12,6 @@ export default defineConfig({
     path: "prisma/migrations",
   },
   datasource: {
-    url: process.env["DATABASE_URL"] ?? `file:${path.resolve("prisma/dev.db")}`,
+    url: databaseUrl,
   },
 });

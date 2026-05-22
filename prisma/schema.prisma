@@ -1,0 +1,91 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model User {
+  id             String        @id @default(uuid())
+  name           String
+  email          String        @unique
+  hashedPassword String
+  createdAt      DateTime      @default(now())
+
+  teamMemberships TeamMember[]
+  sentMessages    ChatMessage[]
+}
+
+model Workspace {
+  id             String   @id @default(uuid())
+  domain         String   @unique
+  websiteName    String
+  description    String
+  niche          String?
+  country        String?
+  language       String?
+  monthlyTraffic Int?
+  createdAt      DateTime @default(now())
+
+  teamMembers            TeamMember[]
+  giverThreads           ExchangeThread[] @relation("GiverWorkspace")
+  receiverThreads        ExchangeThread[] @relation("ReceiverWorkspace")
+  giverLinkPlacements    LinkPlacement[]  @relation("GiverLinkPlacements")
+  receiverLinkPlacements LinkPlacement[]  @relation("ReceiverLinkPlacements")
+}
+
+model TeamMember {
+  id          String    @id @default(uuid())
+  userId      String
+  workspaceId String
+  role        String    // OWNER | EDITOR | VIEWER
+
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, workspaceId])
+}
+
+model ExchangeThread {
+  id                  String    @id @default(uuid())
+  giverWorkspaceId    String
+  receiverWorkspaceId String
+  stage               String    @default("NEW")   // NEW | CHAT | PLACED
+  status              String    @default("PENDING") // PENDING | ACCEPTED | REJECTED
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  giverWorkspace      Workspace     @relation("GiverWorkspace", fields: [giverWorkspaceId], references: [id])
+  receiverWorkspace   Workspace     @relation("ReceiverWorkspace", fields: [receiverWorkspaceId], references: [id])
+  messages            ChatMessage[]
+  linkPlacement       LinkPlacement?
+}
+
+model ChatMessage {
+  id           String   @id @default(uuid())
+  threadId     String
+  senderUserId String
+  messageText  String
+  timestamp    DateTime @default(now())
+
+  thread       ExchangeThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  sender       User           @relation(fields: [senderUserId], references: [id])
+}
+
+model LinkPlacement {
+  id                  String    @id @default(uuid())
+  threadId            String?   @unique
+  giverWorkspaceId    String
+  receiverWorkspaceId String
+  sourceUrl           String
+  targetUrl           String
+  anchorText          String
+  linkType            String    // GUEST_POST | NICHE_EDIT | IMAGE | OTHER
+  status              String    @default("LIVE") // LIVE | REMOVED | DEPARTED
+  datePlaced          DateTime  @default(now())
+
+  thread              ExchangeThread? @relation(fields: [threadId], references: [id])
+  giverWorkspace      Workspace       @relation("GiverLinkPlacements", fields: [giverWorkspaceId], references: [id])
+  receiverWorkspace   Workspace       @relation("ReceiverLinkPlacements", fields: [receiverWorkspaceId], references: [id])
+}

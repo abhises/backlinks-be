@@ -1,0 +1,75 @@
+const express = require('express');
+const prisma = require('../lib/prisma');
+const authMiddleware = require('../middleware/auth');
+
+const router = express.Router();
+
+// POST /api/messages — send message in a thread
+router.post('/', authMiddleware, async (req, res) => {
+  const { threadId, messageText } = req.body;
+  if (!threadId || !messageText) {
+    return res.status(400).json({ error: 'threadId and messageText are required' });
+  }
+
+  try {
+    const member = await prisma.teamMember.findFirst({
+      where: { userId: req.user.userId },
+    });
+    if (!member) return res.status(404).json({ error: 'No workspace found' });
+
+    const thread = await prisma.exchangeThread.findUnique({ where: { id: threadId } });
+    if (!thread) return res.status(404).json({ error: 'Thread not found' });
+
+    if (thread.giverWorkspaceId !== member.workspaceId && thread.receiverWorkspaceId !== member.workspaceId) {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+
+    const message = await prisma.chatMessage.create({
+      data: {
+        threadId,
+        senderUserId: req.user.userId,
+        messageText,
+      },
+      include: {
+        sender: { select: { id: true, name: true, email: true } },
+      },
+    });
+
+    res.status(201).json({ message });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// GET /api/messages/:threadId — get messages for a thread
+router.get('/:threadId', authMiddleware, async (req, res) => {
+  try {
+    const member = await prisma.teamMember.findFirst({
+      where: { userId: req.user.userId },
+    });
+    if (!member) return res.status(404).json({ error: 'No workspace found' });
+
+    const thread = await prisma.exchangeThread.findUnique({ where: { id: req.params.threadId } });
+    if (!thread) return res.status(404).json({ error: 'Thread not found' });
+
+    if (thread.giverWorkspaceId !== member.workspaceId && thread.receiverWorkspaceId !== member.workspaceId) {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+
+    const messages = await prisma.chatMessage.findMany({
+      where: { threadId: req.params.threadId },
+      orderBy: { timestamp: 'asc' },
+      include: {
+        sender: { select: { id: true, name: true, email: true } },
+      },
+    });
+
+    res.json({ messages });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+module.exports = router;

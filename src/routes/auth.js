@@ -48,6 +48,12 @@ router.post('/login', async (req, res) => {
     const user = await prisma.user.findUnique({ where: { email } });
     if (!user) return res.status(401).json({ error: 'Invalid credentials' });
 
+    if (!user.hashedPassword) {
+      return res.status(401).json({
+        error: 'This account was registered using Google. Please sign in with Google.'
+      });
+    }
+
     const valid = await bcrypt.compare(password, user.hashedPassword);
     if (!valid) return res.status(401).json({ error: 'Invalid credentials' });
 
@@ -64,6 +70,60 @@ router.post('/login', async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// POST /api/auth/google
+router.post('/google', async (req, res) => {
+  const { credential } = req.body;
+  if (!credential) {
+    return res.status(400).json({ error: 'Google credential is required' });
+  }
+
+  try {
+    // Verify token with Google's tokeninfo endpoint
+    const response = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${credential}`);
+    if (!response.ok) {
+      return res.status(400).json({ error: 'Invalid Google credential' });
+    }
+
+    const payload = await response.json();
+
+    // Verify email is verified
+    if (payload.email_verified !== 'true' && payload.email_verified !== true) {
+      return res.status(400).json({ error: 'Google email is not verified' });
+    }
+
+    const { email, name } = payload;
+
+    // Check if user already exists
+    let user = await prisma.user.findUnique({ where: { email } });
+
+    if (!user) {
+      // Create a user without a password
+      user = await prisma.user.create({
+        data: {
+          name: name || email.split('@')[0],
+          email,
+          hashedPassword: null,
+        },
+      });
+    }
+
+    // Generate JWT token
+    const token = jwt.sign(
+      { userId: user.id, email: user.email, name: user.name },
+      process.env.JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+
+    res.json({
+      token,
+      user: { id: user.id, name: user.name, email: user.email },
+    });
+  } catch (err) {
+    console.error('Google Auth Error:', err);
+    res.status(500).json({ error: 'Server error during Google authentication' });
   }
 });
 

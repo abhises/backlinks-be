@@ -173,6 +173,13 @@ router.patch('/:id/status', authMiddleware, async (req, res) => {
         receiverWorkspaceName: updated.receiverWorkspace.websiteName,
         receiverWorkspaceDomain: updated.receiverWorkspace.domain,
       });
+    } else if (status === 'REJECTED') {
+      wsManager.sendNotification(updated.giverWorkspaceId, {
+        type: 'connection_rejected',
+        threadId: updated.id,
+        receiverWorkspaceName: updated.receiverWorkspace.websiteName,
+        receiverWorkspaceDomain: updated.receiverWorkspace.domain,
+      });
     }
 
     res.json({ thread: updated });

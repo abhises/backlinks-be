@@ -24,6 +24,10 @@ router.post('/', authMiddleware, async (req, res) => {
     });
     if (!thread) return res.status(404).json({ error: 'Thread not found' });
 
+    if (thread.status === 'REJECTED') {
+      return res.status(403).json({ error: 'This connection was rejected. You cannot send messages.' });
+    }
+
     if (thread.giverWorkspaceId !== member.workspaceId && thread.receiverWorkspaceId !== member.workspaceId) {
       return res.status(403).json({ error: 'Access denied' });
     }

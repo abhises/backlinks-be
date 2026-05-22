@@ -41,8 +41,16 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Internal server error' });
 });
 
+const http = require('http');
+const wsManager = require('./lib/ws');
+
 const PORT = process.env.PORT || 4000;
-app.listen(PORT, () => {
+const server = http.createServer(app);
+
+// Initialize WebSockets
+wsManager.init(server);
+
+server.listen(PORT, () => {
   console.log(`🚀 BackLink Exchange API running on port ${PORT}`);
 });
 

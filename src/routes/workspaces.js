@@ -76,4 +76,36 @@ router.get('/', authMiddleware, async (req, res) => {
   }
 });
 
+// PATCH /api/workspaces/mine — update current user's workspace
+router.patch('/mine', authMiddleware, async (req, res) => {
+  const { domain, websiteName, description, niche } = req.body;
+
+  try {
+    const member = await prisma.teamMember.findFirst({
+      where: { userId: req.user.userId, role: 'OWNER' },
+    });
+    if (!member) {
+      return res.status(403).json({ error: 'Only owners can update workspace details' });
+    }
+
+    const updated = await prisma.workspace.update({
+      where: { id: member.workspaceId },
+      data: {
+        domain: domain ? domain.toLowerCase().replace(/^https?:\/\//, '').replace(/\/$/, '') : undefined,
+        websiteName: websiteName || undefined,
+        description: description || undefined,
+        niche: niche || undefined,
+      },
+    });
+
+    res.json({ workspace: updated });
+  } catch (err) {
+    if (err.code === 'P2002') {
+      return res.status(409).json({ error: 'Domain already registered' });
+    }
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 module.exports = router;

@@ -1,6 +1,7 @@
 const express = require('express');
 const prisma = require('../lib/prisma');
 const authMiddleware = require('../middleware/auth');
+const wsManager = require('../lib/ws');
 
 const router = express.Router();
 
@@ -17,7 +18,10 @@ router.post('/', authMiddleware, async (req, res) => {
     });
     if (!member) return res.status(404).json({ error: 'No workspace found' });
 
-    const thread = await prisma.exchangeThread.findUnique({ where: { id: threadId } });
+    const thread = await prisma.exchangeThread.findUnique({ 
+      where: { id: threadId },
+      include: { giverWorkspace: true, receiverWorkspace: true }
+    });
     if (!thread) return res.status(404).json({ error: 'Thread not found' });
 
     if (thread.giverWorkspaceId !== member.workspaceId && thread.receiverWorkspaceId !== member.workspaceId) {
@@ -33,6 +37,19 @@ router.post('/', authMiddleware, async (req, res) => {
       include: {
         sender: { select: { id: true, name: true, email: true } },
       },
+    });
+
+    wsManager.broadcastToThread(threadId, message);
+
+    const recipientWorkspaceId = thread.giverWorkspaceId === member.workspaceId ? thread.receiverWorkspaceId : thread.giverWorkspaceId;
+    const senderWorkspace = thread.giverWorkspaceId === member.workspaceId ? thread.giverWorkspace : thread.receiverWorkspace;
+    wsManager.sendNotification(recipientWorkspaceId, {
+      type: 'new_message',
+      threadId,
+      messageId: message.id,
+      senderName: req.user.name || 'Partner',
+      senderWorkspaceDomain: senderWorkspace?.domain || 'Partner',
+      messageText: message.messageText
     });
 
     res.status(201).json({ message });

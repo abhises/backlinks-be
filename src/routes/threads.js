@@ -1,6 +1,7 @@
 const express = require('express');
 const prisma = require('../lib/prisma');
 const authMiddleware = require('../middleware/auth');
+const wsManager = require('../lib/ws');
 
 const router = express.Router();
 
@@ -50,6 +51,13 @@ router.post('/', authMiddleware, async (req, res) => {
         giverWorkspace: true,
         receiverWorkspace: true,
       },
+    });
+
+    wsManager.sendNotification(receiverWorkspaceId, {
+      type: 'new_connection',
+      threadId: thread.id,
+      senderWorkspaceName: thread.giverWorkspace.websiteName,
+      senderWorkspaceDomain: thread.giverWorkspace.domain,
     });
 
     res.status(201).json({ thread });
@@ -157,6 +165,15 @@ router.patch('/:id/status', authMiddleware, async (req, res) => {
         receiverWorkspace: true,
       },
     });
+
+    if (status === 'ACCEPTED') {
+      wsManager.sendNotification(updated.giverWorkspaceId, {
+        type: 'connection_accepted',
+        threadId: updated.id,
+        receiverWorkspaceName: updated.receiverWorkspace.websiteName,
+        receiverWorkspaceDomain: updated.receiverWorkspace.domain,
+      });
+    }
 
     res.json({ thread: updated });
   } catch (err) {

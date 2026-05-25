@@ -57,8 +57,100 @@ const getNotifications = async (req, res) => {
   }
 };
 
+const getUsers = async (req, res) => {
+  try {
+    const users = await prisma.user.findMany({
+      orderBy: { createdAt: 'desc' },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        createdAt: true,
+        teamMemberships: {
+          include: { workspace: true }
+        }
+      }
+    });
+    res.json({ users });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+};
+
+const getBacklinks = async (req, res) => {
+  try {
+    const backlinks = await prisma.linkPlacement.findMany({
+      orderBy: { datePlaced: 'desc' },
+      include: {
+        giverWorkspace: true,
+        receiverWorkspace: true,
+      }
+    });
+    res.json({ backlinks });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+};
+
+const updateUser = async (req, res) => {
+  const { name, email, role } = req.body;
+  try {
+    const updated = await prisma.user.update({
+      where: { id: req.params.id },
+      data: { name, email, role },
+    });
+    res.json({ user: updated });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+};
+
+const deleteUser = async (req, res) => {
+  try {
+    await prisma.user.delete({ where: { id: req.params.id } });
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+};
+
+const updateBacklink = async (req, res) => {
+  const { sourceUrl, targetUrl, anchorText, linkType, status } = req.body;
+  try {
+    const updated = await prisma.linkPlacement.update({
+      where: { id: req.params.id },
+      data: { sourceUrl, targetUrl, anchorText, linkType, status },
+    });
+    res.json({ backlink: updated });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+};
+
+const deleteBacklink = async (req, res) => {
+  try {
+    await prisma.linkPlacement.delete({ where: { id: req.params.id } });
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+};
+
 module.exports = {
   getStats,
   sendNotification,
   getNotifications,
+  getUsers,
+  getBacklinks,
+  updateUser,
+  deleteUser,
+  updateBacklink,
+  deleteBacklink,
 };

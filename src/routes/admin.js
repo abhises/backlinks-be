@@ -21,4 +21,14 @@ router.post('/notifications', authMiddleware, adminMiddleware, adminController.s
 // GET /api/admin/notifications
 router.get('/notifications', authMiddleware, adminMiddleware, adminController.getNotifications);
 
+// GET /api/admin/users
+router.get('/users', authMiddleware, adminMiddleware, adminController.getUsers);
+router.put('/users/:id', authMiddleware, adminMiddleware, adminController.updateUser);
+router.delete('/users/:id', authMiddleware, adminMiddleware, adminController.deleteUser);
+
+// GET /api/admin/backlinks
+router.get('/backlinks', authMiddleware, adminMiddleware, adminController.getBacklinks);
+router.put('/backlinks/:id', authMiddleware, adminMiddleware, adminController.updateBacklink);
+router.delete('/backlinks/:id', authMiddleware, adminMiddleware, adminController.deleteBacklink);
+
 module.exports = router;

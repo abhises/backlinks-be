@@ -141,36 +141,71 @@ const updateThreadStatus = async (req, res) => {
     const thread = await prisma.exchangeThread.findUnique({ where: { id: req.params.id } });
     if (!thread) return res.status(404).json({ error: 'Thread not found' });
 
-    // Only receiver can approve/reject
-    if (thread.receiverWorkspaceId !== member.workspaceId) {
-      return res.status(403).json({ error: 'Only the receiver can approve or reject' });
+    const isGiver = thread.giverWorkspaceId === member.workspaceId;
+    const isReceiver = thread.receiverWorkspaceId === member.workspaceId;
+
+    if (!isGiver && !isReceiver) {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+
+    let updateData = {};
+    let newStatus = thread.status;
+    let newStage = thread.stage;
+    
+    let giverAccepted = thread.giverAccepted;
+    let receiverAccepted = thread.receiverAccepted;
+
+    if (status === 'REJECTED') {
+      newStatus = 'REJECTED';
+      newStage = 'NEW';
+      updateData = { status: newStatus, stage: newStage };
+    } else if (status === 'ACCEPTED') {
+      if (isGiver) giverAccepted = true;
+      if (isReceiver) receiverAccepted = true;
+      
+      updateData = { giverAccepted, receiverAccepted };
+      
+      if (giverAccepted && receiverAccepted) {
+        newStatus = 'ACCEPTED';
+        newStage = 'CHAT';
+        updateData.status = newStatus;
+        updateData.stage = newStage;
+      }
     }
 
     const updated = await prisma.exchangeThread.update({
       where: { id: req.params.id },
-      data: {
-        status,
-        stage: status === 'ACCEPTED' ? 'CHAT' : 'NEW',
-      },
+      data: updateData,
       include: {
         giverWorkspace: true,
         receiverWorkspace: true,
       },
     });
 
-    if (status === 'ACCEPTED') {
-      wsManager.sendNotification(updated.giverWorkspaceId, {
+    // Determine who to notify
+    const otherId = isGiver ? thread.receiverWorkspaceId : thread.giverWorkspaceId;
+    const selfWorkspace = isGiver ? updated.giverWorkspace : updated.receiverWorkspace;
+
+    if (newStatus === 'ACCEPTED' && newStage === 'CHAT') {
+      wsManager.sendNotification(otherId, {
         type: 'connection_accepted',
         threadId: updated.id,
-        receiverWorkspaceName: updated.receiverWorkspace.websiteName,
-        receiverWorkspaceDomain: updated.receiverWorkspace.domain,
+        receiverWorkspaceName: selfWorkspace.websiteName,
+        receiverWorkspaceDomain: selfWorkspace.domain,
       });
-    } else if (status === 'REJECTED') {
-      wsManager.sendNotification(updated.giverWorkspaceId, {
+      // also notify self just in case
+      wsManager.sendNotification(member.workspaceId, {
+        type: 'connection_accepted',
+        threadId: updated.id,
+        receiverWorkspaceName: selfWorkspace.websiteName,
+        receiverWorkspaceDomain: selfWorkspace.domain,
+      });
+    } else if (newStatus === 'REJECTED') {
+      wsManager.sendNotification(otherId, {
         type: 'connection_rejected',
         threadId: updated.id,
-        receiverWorkspaceName: updated.receiverWorkspace.websiteName,
-        receiverWorkspaceDomain: updated.receiverWorkspace.domain,
+        receiverWorkspaceName: selfWorkspace.websiteName,
+        receiverWorkspaceDomain: selfWorkspace.domain,
       });
     }
 

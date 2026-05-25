@@ -3,7 +3,7 @@ const cron = require('node-cron');
 const wsManager = require('../lib/ws');
 
 const runWeeklyMatching = async () => {
-  console.log('Running automated connection matching algorithm...');
+  console.log(`[${new Date().toISOString()}] Running automated connection matching algorithm...`);
   try {
     // Fetch workspaces that belong ONLY to non-admin users
     // A workspace has teamMembers, we check if they are owned by an ADMIN
@@ -19,7 +19,7 @@ const runWeeklyMatching = async () => {
       }
     });
     if (workspaces.length < 2) {
-      console.log('Not enough workspaces for matching.');
+      console.log(`[${new Date().toISOString()}] Not enough workspaces for matching.`);
       return { success: false, message: 'Not enough workspaces to perform matching.' };
     }
 
@@ -137,10 +137,10 @@ const runWeeklyMatching = async () => {
       }
     }
     
-    console.log(`Matching completed successfully. Created ${createdCount} new connections.`);
+    console.log(`[${new Date().toISOString()}] Matching completed successfully. Created ${createdCount} new connections.`);
     return { success: true, count: createdCount };
   } catch (error) {
-    console.error('Error in matching algorithm:', error);
+    console.error(`[${new Date().toISOString()}] Error in matching algorithm:`, error);
     return { success: false, error: error.message };
   }
 };
@@ -158,9 +158,9 @@ const initCron = async () => {
     activeJob = cron.schedule(expr, () => {
       runWeeklyMatching();
     });
-    console.log(`Initialized matchmaking cron job with expression: ${expr}`);
+    console.log(`[${new Date().toISOString()}] Initialized matchmaking cron job with expression: ${expr}`);
   } catch (err) {
-    console.error('Failed to init cron:', err);
+    console.error(`[${new Date().toISOString()}] Failed to init cron:`, err);
   }
 };
 

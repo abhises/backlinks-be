@@ -54,6 +54,8 @@ model ExchangeThread {
   receiverWorkspaceId String
   stage               String    @default("NEW")   // NEW | CHAT | PLACED
   status              String    @default("PENDING") // PENDING | ACCEPTED | REJECTED
+  giverAccepted       Boolean   @default(false)
+  receiverAccepted    Boolean   @default(false)
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
 

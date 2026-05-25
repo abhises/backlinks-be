@@ -97,3 +97,10 @@ model AdminNotification {
   description String
   createdAt   DateTime @default(now())
 }
+
+model SystemSettings {
+  id              String   @id @default("singleton")
+  cronExpression  String   @default("*/10 * * * *")
+  matchAmount     Int      @default(2)
+  updatedAt       DateTime @updatedAt
+}

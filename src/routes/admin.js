@@ -31,4 +31,13 @@ router.get('/backlinks', authMiddleware, adminMiddleware, adminController.getBac
 router.put('/backlinks/:id', authMiddleware, adminMiddleware, adminController.updateBacklink);
 router.delete('/backlinks/:id', authMiddleware, adminMiddleware, adminController.deleteBacklink);
 
+// POST /api/admin/trigger-matching
+router.post('/trigger-matching', authMiddleware, adminMiddleware, adminController.triggerMatching);
+
+// GET /api/admin/settings
+router.get('/settings', authMiddleware, adminMiddleware, adminController.getSettings);
+
+// PUT /api/admin/settings
+router.put('/settings', authMiddleware, adminMiddleware, adminController.updateSettings);
+
 module.exports = router;

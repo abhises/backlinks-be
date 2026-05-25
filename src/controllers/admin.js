@@ -2,7 +2,7 @@ const prisma = require('../lib/prisma');
 
 const getStats = async (req, res) => {
   try {
-    const usersCount = await prisma.user.count();
+    const usersCount = await prisma.user.count({ where: { role: { not: 'ADMIN' } } });
     const sitesCount = await prisma.workspace.count();
     const linksCount = await prisma.linkPlacement.count();
 
@@ -60,6 +60,7 @@ const getNotifications = async (req, res) => {
 const getUsers = async (req, res) => {
   try {
     const users = await prisma.user.findMany({
+      where: { role: { not: 'ADMIN' } },
       orderBy: { createdAt: 'desc' },
       select: {
         id: true,
@@ -111,7 +112,50 @@ const updateUser = async (req, res) => {
 
 const deleteUser = async (req, res) => {
   try {
-    await prisma.user.delete({ where: { id: req.params.id } });
+    const userId = req.params.id;
+    // Find the user's workspaces
+    const teamMemberships = await prisma.teamMember.findMany({
+      where: { userId },
+      select: { workspaceId: true }
+    });
+    
+    const workspaceIds = teamMemberships.map(tm => tm.workspaceId);
+    
+    // 1. Delete all messages sent by this user
+    await prisma.chatMessage.deleteMany({
+      where: { senderUserId: userId }
+    });
+
+    if (workspaceIds.length > 0) {
+      // 2. Delete all link placements associated with these workspaces
+      await prisma.linkPlacement.deleteMany({
+        where: {
+          OR: [
+            { giverWorkspaceId: { in: workspaceIds } },
+            { receiverWorkspaceId: { in: workspaceIds } }
+          ]
+        }
+      });
+
+      // 3. Delete all exchange threads associated with these workspaces
+      await prisma.exchangeThread.deleteMany({
+        where: {
+          OR: [
+            { giverWorkspaceId: { in: workspaceIds } },
+            { receiverWorkspaceId: { in: workspaceIds } }
+          ]
+        }
+      });
+
+      // 4. Finally delete the workspaces themselves
+      await prisma.workspace.deleteMany({
+        where: { id: { in: workspaceIds } }
+      });
+    }
+
+    // 5. Delete the user
+    await prisma.user.delete({ where: { id: userId } });
+    
     res.json({ success: true });
   } catch (err) {
     console.error(err);
@@ -143,6 +187,50 @@ const deleteBacklink = async (req, res) => {
   }
 };
 
+const triggerMatching = async (req, res) => {
+  try {
+    const { runWeeklyMatching } = require('../jobs/matcher');
+    const result = await runWeeklyMatching();
+    res.json(result);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+};
+
+const getSettings = async (req, res) => {
+  try {
+    let settings = await prisma.systemSettings.findUnique({ where: { id: 'singleton' } });
+    if (!settings) {
+      settings = await prisma.systemSettings.create({ data: { id: 'singleton' } });
+    }
+    res.json({ settings });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+};
+
+const updateSettings = async (req, res) => {
+  const { cronExpression, matchAmount } = req.body;
+  try {
+    const settings = await prisma.systemSettings.upsert({
+      where: { id: 'singleton' },
+      update: { cronExpression, matchAmount },
+      create: { id: 'singleton', cronExpression, matchAmount },
+    });
+    
+    // Also re-initialize the cron job with the new expression
+    const { initCron } = require('../jobs/matcher');
+    initCron();
+    
+    res.json({ success: true, settings });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+};
+
 module.exports = {
   getStats,
   sendNotification,
@@ -153,4 +241,7 @@ module.exports = {
   deleteUser,
   updateBacklink,
   deleteBacklink,
+  triggerMatching,
+  getSettings,
+  updateSettings,
 };

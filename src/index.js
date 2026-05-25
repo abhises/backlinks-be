@@ -87,6 +87,9 @@ const server = http.createServer(app);
 // Initialize WebSockets
 wsManager.init(server);
 
+// Initialize Matcher Cron Job
+require('./jobs/matcher');
+
 server.listen(PORT, () => {
   console.log(`🚀 BackLink Exchange API running on port ${PORT}`);
 });

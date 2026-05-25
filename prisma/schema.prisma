@@ -11,6 +11,7 @@ model User {
   name           String
   email          String        @unique
   hashedPassword String?
+  role           String        @default("CLIENT") // ADMIN | CLIENT
   createdAt      DateTime      @default(now())
 
   teamMemberships TeamMember[]
@@ -88,4 +89,11 @@ model LinkPlacement {
   thread              ExchangeThread? @relation(fields: [threadId], references: [id])
   giverWorkspace      Workspace       @relation("GiverLinkPlacements", fields: [giverWorkspaceId], references: [id])
   receiverWorkspace   Workspace       @relation("ReceiverLinkPlacements", fields: [receiverWorkspaceId], references: [id])
+}
+
+model AdminNotification {
+  id          String   @id @default(uuid())
+  title       String
+  description String
+  createdAt   DateTime @default(now())
 }

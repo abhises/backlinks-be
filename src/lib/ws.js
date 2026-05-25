@@ -62,6 +62,12 @@ class SocketManager {
       this.io.to(`workspace:${workspaceId}`).emit('notification', payload);
     }
   }
+
+  broadcastGlobalNotification(payload) {
+    if (this.io) {
+      this.io.emit('notification', payload);
+    }
+  }
 }
 
 const socketManager = new SocketManager();

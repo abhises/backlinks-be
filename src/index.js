@@ -64,6 +64,9 @@ app.use('/api/threads', threadRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/links', linkRoutes);
 
+const adminRoutes = require('./routes/admin');
+app.use('/api/admin', adminRoutes);
+
 // 404 handler
 app.use((req, res) => {
   res.status(404).json({ error: 'Route not found' });

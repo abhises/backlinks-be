@@ -151,7 +151,7 @@ const updateThreadStatus = async (req, res) => {
     let updateData = {};
     let newStatus = thread.status;
     let newStage = thread.stage;
-    
+
     let giverAccepted = thread.giverAccepted;
     let receiverAccepted = thread.receiverAccepted;
 
@@ -162,9 +162,9 @@ const updateThreadStatus = async (req, res) => {
     } else if (status === 'ACCEPTED') {
       if (isGiver) giverAccepted = true;
       if (isReceiver) receiverAccepted = true;
-      
+
       updateData = { giverAccepted, receiverAccepted };
-      
+
       if (giverAccepted && receiverAccepted) {
         newStatus = 'ACCEPTED';
         newStage = 'CHAT';

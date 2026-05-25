@@ -1,4 +1,5 @@
 const prisma = require('../lib/prisma');
+const wsManager = require('../lib/ws');
 
 const VALID_LINK_TYPES = ['GUEST_POST', 'NICHE_EDIT', 'IMAGE', 'OTHER'];
 const VALID_STATUSES = ['LIVE', 'REMOVED', 'DEPARTED'];
@@ -24,18 +25,40 @@ const createOrUpdateLink = async (req, res) => {
     let receiverWorkspaceId = null;
 
     if (threadId) {
-      const thread = await prisma.exchangeThread.findUnique({ where: { id: threadId } });
+      const thread = await prisma.exchangeThread.findUnique({ where: { id: threadId }, include: { linkPlacement: true } });
       if (!thread) return res.status(404).json({ error: 'Thread not found' });
-      if (thread.giverWorkspaceId !== member.workspaceId) {
-        return res.status(403).json({ error: 'Only the giver can submit link details' });
+      
+      const isOriginalGiver = thread.giverWorkspaceId === member.workspaceId;
+      const isOriginalReceiver = thread.receiverWorkspaceId === member.workspaceId;
+
+      if (!isOriginalGiver && !isOriginalReceiver) {
+        return res.status(403).json({ error: 'Access denied' });
       }
-      giverWorkspaceId = thread.giverWorkspaceId;
-      receiverWorkspaceId = thread.receiverWorkspaceId;
+
+      if (thread.linkPlacement && thread.linkPlacement.giverWorkspaceId !== member.workspaceId) {
+        return res.status(403).json({ error: 'Link already placed by the other party. You cannot edit it.' });
+      }
+
+      giverWorkspaceId = member.workspaceId;
+      receiverWorkspaceId = isOriginalGiver ? thread.receiverWorkspaceId : thread.giverWorkspaceId;
 
       // Check giver domain ownership
       const giverDomain = member.workspace.domain;
       if (!sourceUrl.includes(giverDomain)) {
         return res.status(400).json({ error: `Source URL must belong to your domain: ${giverDomain}` });
+      }
+
+      // If the original receiver is the one submitting, we must swap the roles on the Thread!
+      if (!isOriginalGiver && !thread.linkPlacement) {
+        await prisma.exchangeThread.update({
+          where: { id: threadId },
+          data: {
+            giverWorkspaceId: member.workspaceId,
+            receiverWorkspaceId: thread.giverWorkspaceId,
+            giverAccepted: thread.receiverAccepted,
+            receiverAccepted: thread.giverAccepted
+          }
+        });
       }
     }
 
@@ -73,6 +96,15 @@ const createOrUpdateLink = async (req, res) => {
           linkType,
           status: 'LIVE',
         },
+      });
+    }
+
+    // Send notification to the receiver that the link was placed
+    if (receiverWorkspaceId) {
+      wsManager.sendNotification(receiverWorkspaceId, {
+        type: 'link_placed',
+        threadId: threadId || '',
+        body: `${member.workspace.domain} has added the backlink details. Check your Dashboard!`,
       });
     }
 

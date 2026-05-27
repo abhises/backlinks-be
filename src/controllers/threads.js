@@ -41,6 +41,7 @@ const createThread = async (req, res) => {
         receiverWorkspaceId,
         stage: 'NEW',
         status: 'PENDING',
+        giverAccepted: true,
       },
       include: {
         giverWorkspace: true,

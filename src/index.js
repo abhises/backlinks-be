@@ -67,6 +67,11 @@ app.use('/api/links', linkRoutes);
 const adminRoutes = require('./routes/admin');
 app.use('/api/admin', adminRoutes);
 
+// Root health check for platforms that ping /
+app.get('/', (req, res) => {
+  res.status(200).send('BackLink Exchange API is running');
+});
+
 // 404 handler
 app.use((req, res) => {
   res.status(404).json({ error: 'Route not found' });

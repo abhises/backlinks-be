@@ -81,7 +81,7 @@ app.use((err, req, res, next) => {
 const http = require('http');
 const wsManager = require('./lib/ws');
 
-const PORT = process.env.PORT || 4000;
+const PORT = process.env.PORT || 7860;
 const server = http.createServer(app);
 
 // Initialize WebSockets

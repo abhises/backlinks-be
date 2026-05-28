@@ -90,7 +90,7 @@ wsManager.init(server);
 // Initialize Matcher Cron Job
 require('./jobs/matcher');
 
-server.listen(PORT, () => {
+server.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 BackLink Exchange API running on port ${PORT}`);
 });
 

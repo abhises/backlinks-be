@@ -86,7 +86,8 @@ app.use((err, req, res, next) => {
 const http = require('http');
 const wsManager = require('./lib/ws');
 
-const PORT = process.env.PORT || 7860;
+// Force 7860 on Hugging Face Spaces (which sets SPACE_ID), otherwise use .env PORT or default to 4000
+const PORT = process.env.SPACE_ID ? 7860 : (process.env.PORT || 4000);
 const server = http.createServer(app);
 
 // Initialize WebSockets

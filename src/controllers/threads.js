@@ -82,8 +82,8 @@ const getThreads = async (req, res) => {
     const threads = await prisma.exchangeThread.findMany({
       where,
       include: {
-        giverWorkspace: { select: { id: true, domain: true, websiteName: true } },
-        receiverWorkspace: { select: { id: true, domain: true, websiteName: true } },
+        giverWorkspace: { select: { id: true, domain: true, websiteName: true, niche: true, country: true, description: true, createdAt: true } },
+        receiverWorkspace: { select: { id: true, domain: true, websiteName: true, niche: true, country: true, description: true, createdAt: true } },
         messages: { orderBy: { timestamp: 'desc' }, take: 1 },
         linkPlacement: true,
       },

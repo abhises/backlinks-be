@@ -23,15 +23,9 @@ async function main() {
   await prisma.workspace.deleteMany({});
   console.log('Cleared Workspaces');
 
-  // Delete all non-admin users
-  const deletedUsers = await prisma.user.deleteMany({
-    where: {
-      role: {
-        not: 'ADMIN'
-      }
-    }
-  });
-  console.log(`Cleared ${deletedUsers.count} non-admin Users`);
+  // Delete all users
+  const deletedUsers = await prisma.user.deleteMany({});
+  console.log(`Cleared ${deletedUsers.count} Users`);
 
   console.log('Database cleanup complete!');
 }

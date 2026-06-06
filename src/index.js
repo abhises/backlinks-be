@@ -7,6 +7,7 @@ const workspaceRoutes = require('./routes/workspaces');
 const threadRoutes = require('./routes/threads');
 const messageRoutes = require('./routes/messages');
 const linkRoutes = require('./routes/links');
+const notificationRoutes = require('./routes/notifications');
 
 const app = express();
 
@@ -63,6 +64,7 @@ app.use('/api/workspaces', workspaceRoutes);
 app.use('/api/threads', threadRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/links', linkRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 const adminRoutes = require('./routes/admin');
 app.use('/api/admin', adminRoutes);

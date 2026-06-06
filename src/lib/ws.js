@@ -1,4 +1,5 @@
 const { Server } = require('socket.io');
+const prisma = require('./prisma');
 
 class SocketManager {
   constructor() {
@@ -57,9 +58,20 @@ class SocketManager {
     }
   }
 
-  sendNotification(workspaceId, payload) {
+  async sendNotification(workspaceId, payload) {
     if (this.io) {
       this.io.to(`workspace:${workspaceId}`).emit('notification', payload);
+    }
+    try {
+      await prisma.notification.create({
+        data: {
+          workspaceId,
+          type: payload.type,
+          payload: JSON.stringify(payload),
+        }
+      });
+    } catch (err) {
+      console.error('Failed to persist notification:', err);
     }
   }
 

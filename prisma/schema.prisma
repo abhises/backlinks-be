@@ -34,6 +34,7 @@ model Workspace {
   receiverThreads        ExchangeThread[] @relation("ReceiverWorkspace")
   giverLinkPlacements    LinkPlacement[]  @relation("GiverLinkPlacements")
   receiverLinkPlacements LinkPlacement[]  @relation("ReceiverLinkPlacements")
+  notifications          Notification[]
 }
 
 model TeamMember {
@@ -98,6 +99,20 @@ model AdminNotification {
   title       String
   description String
   createdAt   DateTime @default(now())
+}
+
+model Notification {
+  id          String   @id @default(uuid())
+  workspaceId String
+  type        String
+  title       String?
+  body        String?
+  link        String?
+  read        Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  payload     String?  
+
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
 }
 
 model SystemSettings {

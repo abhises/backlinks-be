@@ -208,13 +208,7 @@ const updateThreadStatus = async (req, res) => {
         receiverWorkspaceName: selfWorkspace.websiteName,
         receiverWorkspaceDomain: selfWorkspace.domain,
       });
-      // also notify self just in case
-      wsManager.sendNotification(member.workspaceId, {
-        type: 'connection_accepted',
-        threadId: updated.id,
-        receiverWorkspaceName: selfWorkspace.websiteName,
-        receiverWorkspaceDomain: selfWorkspace.domain,
-      });
+
     } else if (newStatus === 'REJECTED') {
       wsManager.sendNotification(otherId, {
         type: 'connection_rejected',

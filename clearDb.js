@@ -3,6 +3,10 @@ const prisma = require('./src/lib/prisma');
 async function main() {
   console.log('Clearing database...');
 
+  // Delete all notifications
+  await prisma.notification.deleteMany({});
+  console.log('Cleared Notifications');
+
   // Delete all messages
   await prisma.chatMessage.deleteMany({});
   console.log('Cleared ChatMessages');

@@ -73,11 +73,16 @@ const getThreads = async (req, res) => {
     const wsId = member.workspaceId;
     let where = {
       OR: [{ giverWorkspaceId: wsId }, { receiverWorkspaceId: wsId }],
+      status: { not: 'REJECTED' },
     };
 
-    if (filter === 'new') where = { ...where, stage: 'NEW' };
-    else if (filter === 'in') where = { receiverWorkspaceId: wsId };
-    else if (filter === 'out') where = { giverWorkspaceId: wsId };
+    if (filter === 'new') where.stage = 'NEW';
+    else if (filter === 'in') {
+      where = { receiverWorkspaceId: wsId, status: { not: 'REJECTED' } };
+    }
+    else if (filter === 'out') {
+      where = { giverWorkspaceId: wsId, status: { not: 'REJECTED' } };
+    }
 
     const threads = await prisma.exchangeThread.findMany({
       where,

@@ -82,8 +82,18 @@ const getThreads = async (req, res) => {
     const threads = await prisma.exchangeThread.findMany({
       where,
       include: {
-        giverWorkspace: { select: { id: true, domain: true, websiteName: true, niche: true, country: true, description: true, createdAt: true } },
-        receiverWorkspace: { select: { id: true, domain: true, websiteName: true, niche: true, country: true, description: true, createdAt: true } },
+        giverWorkspace: { 
+          select: { 
+            id: true, domain: true, websiteName: true, niche: true, country: true, description: true, createdAt: true,
+            teamMembers: { where: { role: 'OWNER' }, select: { user: { select: { name: true } } } }
+          } 
+        },
+        receiverWorkspace: { 
+          select: { 
+            id: true, domain: true, websiteName: true, niche: true, country: true, description: true, createdAt: true,
+            teamMembers: { where: { role: 'OWNER' }, select: { user: { select: { name: true } } } }
+          } 
+        },
         messages: { orderBy: { timestamp: 'desc' }, take: 1 },
         linkPlacement: true,
       },
@@ -105,8 +115,12 @@ const getThreadById = async (req, res) => {
     const thread = await prisma.exchangeThread.findUnique({
       where: { id: req.params.id },
       include: {
-        giverWorkspace: true,
-        receiverWorkspace: true,
+        giverWorkspace: {
+          include: { teamMembers: { where: { role: 'OWNER' }, select: { user: { select: { name: true } } } } }
+        },
+        receiverWorkspace: {
+          include: { teamMembers: { where: { role: 'OWNER' }, select: { user: { select: { name: true } } } } }
+        },
         messages: {
           orderBy: { timestamp: 'asc' },
           include: { sender: { select: { id: true, name: true, email: true } } },

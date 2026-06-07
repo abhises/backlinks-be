@@ -75,9 +75,22 @@ class SocketManager {
     }
   }
 
-  broadcastGlobalNotification(payload) {
+  async broadcastGlobalNotification(payload) {
     if (this.io) {
       this.io.emit('notification', payload);
+    }
+    try {
+      const workspaces = await prisma.workspace.findMany({ select: { id: true } });
+      if (workspaces.length > 0) {
+        const notifications = workspaces.map(ws => ({
+          workspaceId: ws.id,
+          type: payload.type,
+          payload: JSON.stringify(payload),
+        }));
+        await prisma.notification.createMany({ data: notifications });
+      }
+    } catch (err) {
+      console.error('Failed to persist global notifications:', err);
     }
   }
 }

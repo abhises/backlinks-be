@@ -29,7 +29,7 @@ const sendNotification = async (req, res) => {
     });
 
     const wsManager = require('../lib/ws');
-    wsManager.broadcastGlobalNotification({
+    await wsManager.broadcastGlobalNotification({
       type: 'admin_broadcast',
       id: notification.id,
       title,

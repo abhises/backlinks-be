@@ -57,6 +57,7 @@ model ExchangeThread {
   status              String    @default("PENDING") // PENDING | ACCEPTED | REJECTED
   giverAccepted       Boolean   @default(false)
   receiverAccepted    Boolean   @default(false)
+  rejectedByWorkspaceId String?
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
 
@@ -119,5 +120,6 @@ model SystemSettings {
   id              String   @id @default("singleton")
   cronExpression  String   @default("*/10 * * * *")
   matchAmount     Int      @default(2)
+  rejectLimit     Int      @default(5)
   updatedAt       DateTime @updatedAt
 }

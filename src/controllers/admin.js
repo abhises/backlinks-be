@@ -73,7 +73,30 @@ const getUsers = async (req, res) => {
         }
       }
     });
-    res.json({ users });
+
+    const usersWithCounts = await Promise.all(users.map(async (u) => {
+      let rejectedIn = 0;
+      let rejectedOut = 0;
+
+      if (u.teamMemberships && u.teamMemberships.length > 0) {
+        const wsId = u.teamMemberships[0].workspaceId;
+        const rejectedThreads = await prisma.exchangeThread.findMany({
+          where: { rejectedByWorkspaceId: wsId, status: 'REJECTED' }
+        });
+        for (const t of rejectedThreads) {
+          if (t.receiverWorkspaceId === wsId) rejectedIn++;
+          if (t.giverWorkspaceId === wsId) rejectedOut++;
+        }
+      }
+
+      return {
+        ...u,
+        rejectedIn,
+        rejectedOut
+      };
+    }));
+
+    res.json({ users: usersWithCounts });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Server error' });
@@ -212,12 +235,12 @@ const getSettings = async (req, res) => {
 };
 
 const updateSettings = async (req, res) => {
-  const { cronExpression, matchAmount } = req.body;
+  const { cronExpression, matchAmount, rejectLimit } = req.body;
   try {
     const settings = await prisma.systemSettings.upsert({
       where: { id: 'singleton' },
-      update: { cronExpression, matchAmount },
-      create: { id: 'singleton', cronExpression, matchAmount },
+      update: { cronExpression, matchAmount, rejectLimit },
+      create: { id: 'singleton', cronExpression, matchAmount, rejectLimit },
     });
     
     // Also re-initialize the cron job with the new expression

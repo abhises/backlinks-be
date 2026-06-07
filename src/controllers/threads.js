@@ -83,6 +83,9 @@ const getThreads = async (req, res) => {
     else if (filter === 'out') {
       where = { giverWorkspaceId: wsId, status: { not: 'REJECTED' } };
     }
+    else if (filter === 'rejected') {
+      where = { rejectedByWorkspaceId: wsId, status: 'REJECTED' };
+    }
 
     const threads = await prisma.exchangeThread.findMany({
       where,
@@ -105,7 +108,10 @@ const getThreads = async (req, res) => {
       orderBy: { updatedAt: 'desc' },
     });
 
-    res.json({ threads, workspaceId: wsId });
+    let settings = await prisma.systemSettings.findUnique({ where: { id: 'singleton' } });
+    const rejectLimit = settings ? settings.rejectLimit : 5;
+
+    res.json({ threads, workspaceId: wsId, rejectLimit });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Server error' });
@@ -176,9 +182,19 @@ const updateThreadStatus = async (req, res) => {
     let receiverAccepted = thread.receiverAccepted;
 
     if (status === 'REJECTED') {
+      let settings = await prisma.systemSettings.findUnique({ where: { id: 'singleton' } });
+      const rejectLimit = settings ? settings.rejectLimit : 5;
+
+      const rejectedCount = await prisma.exchangeThread.count({
+        where: { rejectedByWorkspaceId: member.workspaceId, status: 'REJECTED' }
+      });
+      if (rejectedCount >= rejectLimit) {
+        return res.status(403).json({ error: `Cannot reject more than ${rejectLimit} requests` });
+      }
+
       newStatus = 'REJECTED';
       newStage = 'NEW';
-      updateData = { status: newStatus, stage: newStage };
+      updateData = { status: newStatus, stage: newStage, rejectedByWorkspaceId: member.workspaceId };
     } else if (status === 'ACCEPTED') {
       if (isGiver) giverAccepted = true;
       if (isReceiver) receiverAccepted = true;

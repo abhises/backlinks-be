@@ -89,7 +89,10 @@ const runWeeklyMatching = async () => {
       const neededGiving = Math.max(0, matchAmount - activeGivingCounts[ws.id]);
 
       if (neededGiving > 0) {
-        const potentialReceivers = workspaces.filter(w => !excludedReceivers.has(w.id));
+        // Only consider receivers who haven't hit their receiving quota yet
+        const potentialReceivers = workspaces.filter(w => 
+          !excludedReceivers.has(w.id) && activeReceivingCounts[w.id] < matchAmount
+        );
         if (potentialReceivers.length === 0 && !poolExhaustedWarningSent) {
           wsManager.sendNotification(ws.id, {
             type: 'system',
@@ -146,7 +149,10 @@ const runWeeklyMatching = async () => {
       const neededReceiving = Math.max(0, matchAmount - activeReceivingCounts[ws.id]);
 
       if (neededReceiving > 0) {
-        const potentialGivers = workspaces.filter(w => !excludedGivers.has(w.id));
+        // Only consider givers who haven't hit their giving quota yet
+        const potentialGivers = workspaces.filter(w => 
+          !excludedGivers.has(w.id) && activeGivingCounts[w.id] < matchAmount
+        );
         if (potentialGivers.length === 0 && !poolExhaustedWarningSent) {
           wsManager.sendNotification(ws.id, {
             type: 'system',

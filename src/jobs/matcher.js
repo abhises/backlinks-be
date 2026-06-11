@@ -50,6 +50,8 @@ const runWeeklyMatching = async () => {
       // Exclude self and anyone already interacted with
       const excludes = [...new Set([...interactedIds, ws.id])];
       
+      let poolExhaustedWarningSent = false;
+
       // Count current active (NEW/PENDING) giving threads to avoid spamming
       const activeGivingCount = allInteractions.filter(t => 
         t.giverWorkspaceId === ws.id && (t.status === 'PENDING' || t.stage === 'NEW')
@@ -59,6 +61,15 @@ const runWeeklyMatching = async () => {
 
       if (neededGiving > 0) {
         const potentialReceivers = workspaces.filter(w => !excludes.includes(w.id));
+        if (potentialReceivers.length === 0 && !poolExhaustedWarningSent) {
+          wsManager.sendNotification(ws.id, {
+            type: 'system',
+            title: 'No New Matches Found',
+            body: "We couldn't find a new match for you this cycle. You'll be automatically matched as new websites join the network."
+          });
+          poolExhaustedWarningSent = true;
+        }
+
         const receivers = potentialReceivers.sort(() => 0.5 - Math.random()).slice(0, neededGiving);
         
         for (const rec of receivers) {
@@ -102,6 +113,15 @@ const runWeeklyMatching = async () => {
 
       if (neededReceiving > 0) {
         const potentialGivers = workspaces.filter(w => !excludes.includes(w.id));
+        if (potentialGivers.length === 0 && !poolExhaustedWarningSent) {
+          wsManager.sendNotification(ws.id, {
+            type: 'system',
+            title: 'No New Matches Found',
+            body: "We couldn't find a new match for you this cycle. You'll be automatically matched as new websites join the network."
+          });
+          poolExhaustedWarningSent = true;
+        }
+
         const givers = potentialGivers.sort(() => 0.5 - Math.random()).slice(0, neededReceiving);
         
         for (const giv of givers) {

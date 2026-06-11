@@ -6,7 +6,6 @@ const runWeeklyMatching = async () => {
   console.log(`[${new Date().toISOString()}] Running automated connection matching algorithm...`);
   try {
     // Fetch workspaces that belong ONLY to non-admin users
-    // A workspace has teamMembers, we check if they are owned by an ADMIN
     const workspaces = await prisma.workspace.findMany({
       where: {
         teamMembers: {
@@ -32,8 +31,33 @@ const runWeeklyMatching = async () => {
       if (settings && settings.matchAmount) matchAmount = settings.matchAmount;
     } catch(e) {}
 
+    // Pre-calculate active giving and receiving counts for all workspaces for fairness weighting
+    const allActiveThreads = await prisma.exchangeThread.findMany({
+      where: {
+        OR: [
+          { status: 'PENDING' },
+          { stage: 'NEW' }
+        ]
+      }
+    });
+
+    const activeGivingCounts = {};
+    const activeReceivingCounts = {};
     for (const ws of workspaces) {
-      // Find all existing interactions (both giving and receiving) to prevent ANY duplicate or reciprocal matching
+      activeGivingCounts[ws.id] = 0;
+      activeReceivingCounts[ws.id] = 0;
+    }
+    for (const t of allActiveThreads) {
+      if (activeGivingCounts[t.giverWorkspaceId] !== undefined) {
+        activeGivingCounts[t.giverWorkspaceId]++;
+      }
+      if (activeReceivingCounts[t.receiverWorkspaceId] !== undefined) {
+        activeReceivingCounts[t.receiverWorkspaceId]++;
+      }
+    }
+
+    for (const ws of workspaces) {
+      // Find all existing interactions for this workspace
       const allInteractions = await prisma.exchangeThread.findMany({
         where: {
           OR: [
@@ -43,24 +67,29 @@ const runWeeklyMatching = async () => {
         }
       });
       
-      const interactedIds = allInteractions.map(t => 
-        t.giverWorkspaceId === ws.id ? t.receiverWorkspaceId : t.giverWorkspaceId
-      );
-      
-      // Exclude self and anyone already interacted with
-      const excludes = [...new Set([...interactedIds, ws.id])];
+      const excludedReceivers = new Set([ws.id]);
+      const excludedGivers = new Set([ws.id]);
+
+      for (const t of allInteractions) {
+        if (t.giverWorkspaceId === ws.id) {
+          // ws already gave to them, don't try again
+          excludedReceivers.add(t.receiverWorkspaceId);
+          // Block reverse direction (reciprocal) only if it wasn't rejected
+          if (t.status !== 'REJECTED') excludedGivers.add(t.receiverWorkspaceId);
+        } else {
+          // someone already gave to ws, they can't give to ws again
+          excludedGivers.add(t.giverWorkspaceId);
+          // Block reverse direction (reciprocal) only if it wasn't rejected
+          if (t.status !== 'REJECTED') excludedReceivers.add(t.giverWorkspaceId);
+        }
+      }
       
       let poolExhaustedWarningSent = false;
-
-      // Count current active (NEW/PENDING) giving threads to avoid spamming
-      const activeGivingCount = allInteractions.filter(t => 
-        t.giverWorkspaceId === ws.id && (t.status === 'PENDING' || t.stage === 'NEW')
-      ).length;
       
-      const neededGiving = Math.max(0, matchAmount - activeGivingCount);
+      const neededGiving = Math.max(0, matchAmount - activeGivingCounts[ws.id]);
 
       if (neededGiving > 0) {
-        const potentialReceivers = workspaces.filter(w => !excludes.includes(w.id));
+        const potentialReceivers = workspaces.filter(w => !excludedReceivers.has(w.id));
         if (potentialReceivers.length === 0 && !poolExhaustedWarningSent) {
           wsManager.sendNotification(ws.id, {
             type: 'system',
@@ -70,7 +99,13 @@ const runWeeklyMatching = async () => {
           poolExhaustedWarningSent = true;
         }
 
-        const receivers = potentialReceivers.sort(() => 0.5 - Math.random()).slice(0, neededGiving);
+        const receivers = potentialReceivers
+          .sort((a, b) => {
+            const diff = activeReceivingCounts[a.id] - activeReceivingCounts[b.id];
+            if (diff === 0) return 0.5 - Math.random(); // tie-breaker
+            return diff; // prefer receivers with lowest activeReceivingCounts
+          })
+          .slice(0, neededGiving);
         
         for (const rec of receivers) {
           const thread = await prisma.exchangeThread.create({
@@ -83,8 +118,12 @@ const runWeeklyMatching = async () => {
             include: { giverWorkspace: true, receiverWorkspace: true }
           });
 
-          // Add to excludes so we don't pick them again in the receiving loop
-          excludes.push(rec.id);
+          // Block them in both directions for the rest of this execution since it's active now
+          excludedReceivers.add(rec.id);
+          excludedGivers.add(rec.id);
+          
+          activeGivingCounts[ws.id]++;
+          activeReceivingCounts[rec.id]++;
 
           wsManager.sendNotification(ws.id, {
             type: 'new_thread',
@@ -104,15 +143,10 @@ const runWeeklyMatching = async () => {
         }
       }
 
-      // Count current active (NEW/PENDING) receiving threads to avoid spamming
-      const activeReceivingCount = allInteractions.filter(t => 
-        t.receiverWorkspaceId === ws.id && (t.status === 'PENDING' || t.stage === 'NEW')
-      ).length;
-      
-      const neededReceiving = Math.max(0, matchAmount - activeReceivingCount);
+      const neededReceiving = Math.max(0, matchAmount - activeReceivingCounts[ws.id]);
 
       if (neededReceiving > 0) {
-        const potentialGivers = workspaces.filter(w => !excludes.includes(w.id));
+        const potentialGivers = workspaces.filter(w => !excludedGivers.has(w.id));
         if (potentialGivers.length === 0 && !poolExhaustedWarningSent) {
           wsManager.sendNotification(ws.id, {
             type: 'system',
@@ -122,7 +156,13 @@ const runWeeklyMatching = async () => {
           poolExhaustedWarningSent = true;
         }
 
-        const givers = potentialGivers.sort(() => 0.5 - Math.random()).slice(0, neededReceiving);
+        const givers = potentialGivers
+          .sort((a, b) => {
+            const diff = activeGivingCounts[a.id] - activeGivingCounts[b.id];
+            if (diff === 0) return 0.5 - Math.random(); // tie-breaker
+            return diff; // prefer givers with lowest activeGivingCounts
+          })
+          .slice(0, neededReceiving);
         
         for (const giv of givers) {
           const thread = await prisma.exchangeThread.create({
@@ -135,8 +175,12 @@ const runWeeklyMatching = async () => {
             include: { giverWorkspace: true, receiverWorkspace: true }
           });
           
-          // Add to excludes
-          excludes.push(giv.id);
+          // Block them in both directions
+          excludedGivers.add(giv.id);
+          excludedReceivers.add(giv.id);
+          
+          activeReceivingCounts[ws.id]++;
+          activeGivingCounts[giv.id]++;
           
           wsManager.sendNotification(giv.id, {
             type: 'new_thread',

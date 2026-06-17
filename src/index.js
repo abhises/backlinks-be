@@ -11,21 +11,31 @@ const notificationRoutes = require('./routes/notifications');
 
 const app = express();
 
-// Middleware
+// Middleware - Parsed from env array, stripping trailing slashes for clean strict domain matching
 const allowedOrigins = process.env.FRONTEND_URL
-  ? process.env.FRONTEND_URL.split(',').map(url => url.trim())
+  ? process.env.FRONTEND_URL.split(',').map(url => url.trim().replace(/\/$/, ''))
   : ['http://localhost:3000'];
+
+// Explicitly ensure both variations are present if serpsupport is declared
+if (allowedOrigins.includes('https://www.serpsupport.com') && !allowedOrigins.includes('https://serpsupport.com')) {
+  allowedOrigins.push('https://serpsupport.com');
+}
 
 app.use(cors({
   origin: (origin, callback) => {
-    if (!origin || allowedOrigins.includes(origin)) {
+    // Normalizing browser origin string to strip trailing slashes just in case
+    const normalizedOrigin = origin ? origin.replace(/\/$/, '') : null;
+
+    if (!normalizedOrigin || allowedOrigins.includes(normalizedOrigin)) {
       callback(null, true);
     } else {
+      console.error(`[CORS Blocked] Origin: ${origin} was not found in:`, allowedOrigins);
       callback(new Error('Not allowed by CORS'));
     }
   },
   credentials: true,
 }));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 

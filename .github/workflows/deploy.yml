@@ -18,13 +18,25 @@ jobs:
         with:
           host: ${{ secrets.SERVER_IP }}
           username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.SERVER_SSH_KEY }} # Uses your authorized application key structure
+          key: ${{ secrets.SERVER_SSH_KEY }}
           port: 22
           script: |
+            # 1. Dynamically source NVM to upgrade the shell context to Node 22
+            export NVM_DIR="$HOME/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+            nvm use 22 || nvm install 22
+
+            # 2. Step into your public web application root space
             cd /home/489042.cloudwaysapps.com/sspcnhpfsd/public_html
+            
+            # 3. Pull code changes cleanly
             git fetch --all
             git reset --hard origin/main
+            
+            # 4. Synchronize application package trees and update databases
             npm install --cache=./.local-cache --no-audit --no-fund
             npx prisma generate
+            
+            # 5. Bring down and bounce your PM2 environment smoothly
             export PM2_HOME="/home/489042.cloudwaysapps.com/sspcnhpfsd/public_html/.pm2"
             /home/489042.cloudwaysapps.com/sspcnhpfsd/public_html/.pm2-global/lib/node_modules/pm2/bin/pm2 reload backlink-backend --update-env

@@ -1,0 +1,30 @@
+name: Deploy Backlink Backend to Cloudways
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: SSH and Remote Deploy Execution
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: ${{ secrets.SERVER_USER }}
+          password: ${{ secrets.SERVER_PASSWORD }}
+          port: 22
+          script: |
+            cd /home/489042.cloudwaysapps.com/sspcnhpfsd/public_html
+            git fetch --all
+            git reset --hard origin/main
+            npm install --cache=./.local-cache --no-audit --no-fund
+            npx prisma generate
+            export PM2_HOME="/home/489042.cloudwaysapps.com/sspcnhpfsd/public_html/.pm2"
+            /home/489042.cloudwaysapps.com/sspcnhpfsd/public_html/.pm2-global/lib/node_modules/pm2/bin/pm2 reload backlink-backend --update-env

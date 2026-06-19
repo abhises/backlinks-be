@@ -39,4 +39,10 @@ jobs:
             
             # 5. Bring down and bounce your PM2 environment smoothly
             export PM2_HOME="/home/489042.cloudwaysapps.com/sspcnhpfsd/public_html/.pm2"
-            /home/489042.cloudwaysapps.com/sspcnhpfsd/public_html/.pm2-global/lib/node_modules/pm2/bin/pm2 reload backlink-backend --update-env
+            
+            # Delete the old PM2 process to permanently clear the cached Node 18 interpreter
+            /home/489042.cloudwaysapps.com/sspcnhpfsd/public_html/.pm2-global/lib/node_modules/pm2/bin/pm2 delete backlink-backend || true
+            
+            # Start fresh using the ecosystem config which binds to the active Node 22 environment
+            /home/489042.cloudwaysapps.com/sspcnhpfsd/public_html/.pm2-global/lib/node_modules/pm2/bin/pm2 start ecosystem.config.js --env production
+            /home/489042.cloudwaysapps.com/sspcnhpfsd/public_html/.pm2-global/lib/node_modules/pm2/bin/pm2 save

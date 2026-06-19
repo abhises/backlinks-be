@@ -8,15 +8,8 @@ class SocketManager {
 
   init(server) {
     const allowedOrigins = process.env.FRONTEND_URL
-      ? process.env.FRONTEND_URL.split(',').map(url => url.trim().replace(/\/$/, ''))
+      ? process.env.FRONTEND_URL.split(',').map(url => url.trim())
       : ['http://localhost:3000'];
-
-    if (allowedOrigins.includes('https://www.serpsupport.com') && !allowedOrigins.includes('https://serpsupport.com')) {
-      allowedOrigins.push('https://serpsupport.com');
-    }
-    if (allowedOrigins.includes('https://serpsupport.com') && !allowedOrigins.includes('https://www.serpsupport.com')) {
-      allowedOrigins.push('https://www.serpsupport.com');
-    }
 
     this.io = new Server(server, {
       cors: {

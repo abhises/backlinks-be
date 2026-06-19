@@ -20,9 +20,6 @@ const allowedOrigins = process.env.FRONTEND_URL
 if (allowedOrigins.includes('https://www.serpsupport.com') && !allowedOrigins.includes('https://serpsupport.com')) {
   allowedOrigins.push('https://serpsupport.com');
 }
-if (allowedOrigins.includes('https://serpsupport.com') && !allowedOrigins.includes('https://www.serpsupport.com')) {
-  allowedOrigins.push('https://www.serpsupport.com');
-}
 
 app.use(cors({
   origin: (origin, callback) => {

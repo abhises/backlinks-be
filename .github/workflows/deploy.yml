@@ -13,15 +13,7 @@ jobs:
       - name: Checkout Source Code
         uses: actions/checkout@v4
 
-      - name: Copy files to Cloudways via SCP
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.SERVER_IP }}
-          username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.SERVER_SSH_KEY }}
-          port: 22
-          source: "src,package.json,package-lock.json,ecosystem.config.js,prisma"
-          target: "/home/489042.cloudwaysapps.com/sspcnhpfsd/public_html"
+
 
       - name: SSH and Remote Deploy Execution
         uses: appleboy/ssh-action@v1.0.3

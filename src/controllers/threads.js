@@ -1,5 +1,6 @@
 const prisma = require('../lib/prisma');
 const wsManager = require('../lib/ws');
+const { sendConnectionAcceptedEmail } = require('../lib/email');
 
 // Helper: get user's workspace
 async function getUserWorkspace(userId) {
@@ -213,8 +214,12 @@ const updateThreadStatus = async (req, res) => {
       where: { id: req.params.id },
       data: updateData,
       include: {
-        giverWorkspace: true,
-        receiverWorkspace: true,
+        giverWorkspace: {
+          include: { teamMembers: { where: { role: 'OWNER' }, include: { user: true } } }
+        },
+        receiverWorkspace: {
+          include: { teamMembers: { where: { role: 'OWNER' }, include: { user: true } } }
+        },
       },
     });
 
@@ -229,6 +234,12 @@ const updateThreadStatus = async (req, res) => {
         receiverWorkspaceName: selfWorkspace.websiteName,
         receiverWorkspaceDomain: selfWorkspace.domain,
       });
+      
+      const otherWorkspace = isGiver ? updated.receiverWorkspace : updated.giverWorkspace;
+      const otherOwner = otherWorkspace.teamMembers?.[0]?.user;
+      if (otherOwner) {
+        await sendConnectionAcceptedEmail(otherOwner.email, otherOwner.name, selfWorkspace.domain);
+      }
 
     } else if (newStatus === 'REJECTED') {
       wsManager.sendNotification(otherId, {

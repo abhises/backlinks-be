@@ -1,6 +1,7 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const prisma = require('../lib/prisma');
+const { sendWelcomeEmail } = require('../lib/email');
 
 const register = async (req, res) => {
   const { name, email, password } = req.body;
@@ -16,6 +17,9 @@ const register = async (req, res) => {
     const user = await prisma.user.create({
       data: { name, email, hashedPassword },
     });
+
+    // Send welcome email
+    await sendWelcomeEmail(user.email, user.name);
 
     const token = jwt.sign(
       { userId: user.id, email: user.email, name: user.name, role: user.role },
@@ -102,6 +106,9 @@ const google = async (req, res) => {
           hashedPassword: null,
         },
       });
+
+      // Send welcome email
+      await sendWelcomeEmail(user.email, user.name);
     }
 
     // Generate JWT token

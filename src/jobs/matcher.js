@@ -1,6 +1,7 @@
 const prisma = require('../lib/prisma');
 const cron = require('node-cron');
 const wsManager = require('../lib/ws');
+const { sendNewMatchEmail } = require('../lib/email');
 
 const runWeeklyMatching = async () => {
   console.log(`[${new Date().toISOString()}] Running automated connection matching algorithm...`);
@@ -15,6 +16,12 @@ const runWeeklyMatching = async () => {
             }
           }
         }
+      },
+      include: {
+        teamMembers: {
+          where: { role: 'OWNER' },
+          include: { user: true }
+        }
       }
     });
     if (workspaces.length < 2) {
@@ -23,6 +30,7 @@ const runWeeklyMatching = async () => {
     }
 
     let createdCount = 0;
+    const emailedUsers = new Set();
     
     // Fetch matchAmount from DB or default to 2
     let matchAmount = 2;
@@ -142,6 +150,17 @@ const runWeeklyMatching = async () => {
             body: `You have been matched to receive a backlink from ${ws.domain}. Check your inbox!`
           });
           
+          const wsOwner = ws.teamMembers?.[0]?.user;
+          const recOwner = rec.teamMembers?.[0]?.user;
+          if (wsOwner && !emailedUsers.has(wsOwner.email)) {
+            await sendNewMatchEmail(wsOwner.email, wsOwner.name, true, rec.domain);
+            emailedUsers.add(wsOwner.email);
+          }
+          if (recOwner && !emailedUsers.has(recOwner.email)) {
+            await sendNewMatchEmail(recOwner.email, recOwner.name, false, ws.domain);
+            emailedUsers.add(recOwner.email);
+          }
+          
           createdCount++;
         }
       }
@@ -201,6 +220,17 @@ const runWeeklyMatching = async () => {
             title: 'New Connection Match!',
             body: `You have been matched to receive a backlink from ${giv.domain}. Check your inbox!`
           });
+          
+          const givOwner = giv.teamMembers?.[0]?.user;
+          const wsOwnerRec = ws.teamMembers?.[0]?.user;
+          if (givOwner && !emailedUsers.has(givOwner.email)) {
+            await sendNewMatchEmail(givOwner.email, givOwner.name, true, ws.domain);
+            emailedUsers.add(givOwner.email);
+          }
+          if (wsOwnerRec && !emailedUsers.has(wsOwnerRec.email)) {
+            await sendNewMatchEmail(wsOwnerRec.email, wsOwnerRec.name, false, giv.domain);
+            emailedUsers.add(wsOwnerRec.email);
+          }
           
           createdCount++;
         }

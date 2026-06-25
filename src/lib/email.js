@@ -1,5 +1,12 @@
 const nodemailer = require('nodemailer');
 
+const getFrontendUrl = () => {
+  if (process.env.NODE_ENV === 'production') {
+    return 'https://www.serpsupport.com';
+  }
+  return process.env.FRONTEND_URL ? process.env.FRONTEND_URL.split(',')[0].trim().replace(/\/$/, '') : 'http://localhost:3000';
+};
+
 const transporter = nodemailer.createTransport({
   host: process.env.EMAIL_HOST,
   port: process.env.EMAIL_PORT,
@@ -26,7 +33,7 @@ const sendWelcomeEmail = async (email, name) => {
             <p style="font-size: 16px; line-height: 1.6;">Your account has been successfully created.</p>
             <p style="font-size: 16px; line-height: 1.6;">We're thrilled to have you join us at SerpSupport. If you have any questions or need help getting started, simply reply to this email.</p>
             <div style="text-align: center; margin-top: 30px;">
-              <a href="${process.env.FRONTEND_URL}" style="display: inline-block; background-color: #00b899; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-weight: bold; font-size: 16px;">Go to Dashboard</a>
+              <a href="${getFrontendUrl()}" style="display: inline-block; background-color: #00b899; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-weight: bold; font-size: 16px;">Go to Dashboard</a>
             </div>
           </div>
           <div style="text-align: center; margin-top: 20px; color: #888; font-size: 12px;">
@@ -60,7 +67,7 @@ const sendNewMatchEmail = async (email, name, isGiver, otherDomain) => {
             <p style="font-size: 16px; line-height: 1.6;">We found a new match for you! You have been selected to <strong>${roleText}</strong>.</p>
             <p style="font-size: 16px; line-height: 1.6;">Please log in to your dashboard to review this connection and start the exchange process.</p>
             <div style="text-align: center; margin-top: 30px;">
-              <a href="${process.env.FRONTEND_URL}" style="display: inline-block; background-color: #00b899; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-weight: bold; font-size: 16px;">View Connection</a>
+              <a href="${getFrontendUrl()}" style="display: inline-block; background-color: #00b899; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-weight: bold; font-size: 16px;">View Connection</a>
             </div>
           </div>
           <div style="text-align: center; margin-top: 20px; color: #888; font-size: 12px;">
@@ -92,7 +99,7 @@ const sendConnectionAcceptedEmail = async (email, name, acceptedDomain) => {
             <p style="font-size: 16px; line-height: 1.6;">Great news! <strong>${acceptedDomain}</strong> has accepted your connection request.</p>
             <p style="font-size: 16px; line-height: 1.6;">You can now start messaging them to organize your backlink exchange.</p>
             <div style="text-align: center; margin-top: 30px;">
-              <a href="${process.env.FRONTEND_URL}/inbox" style="display: inline-block; background-color: #00b899; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-weight: bold; font-size: 16px;">Go to Inbox</a>
+              <a href="${getFrontendUrl()}/inbox" style="display: inline-block; background-color: #00b899; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-weight: bold; font-size: 16px;">Go to Inbox</a>
             </div>
           </div>
           <div style="text-align: center; margin-top: 20px; color: #888; font-size: 12px;">

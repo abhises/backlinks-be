@@ -15,6 +15,7 @@ const getStats = async (req, res) => {
     console.error(err);
     res.status(500).json({ error: 'Server error' });
   }
+
 };
 
 const sendNotification = async (req, res) => {
@@ -141,9 +142,9 @@ const deleteUser = async (req, res) => {
       where: { userId },
       select: { workspaceId: true }
     });
-    
+
     const workspaceIds = teamMemberships.map(tm => tm.workspaceId);
-    
+
     // 1. Delete all messages sent by this user
     await prisma.chatMessage.deleteMany({
       where: { senderUserId: userId }
@@ -178,7 +179,7 @@ const deleteUser = async (req, res) => {
 
     // 5. Delete the user
     await prisma.user.delete({ where: { id: userId } });
-    
+
     res.json({ success: true });
   } catch (err) {
     console.error(err);
@@ -242,11 +243,11 @@ const updateSettings = async (req, res) => {
       update: { cronExpression, matchAmount, rejectLimit, answerTimeoutDays, placementTimeoutDays },
       create: { id: 'singleton', cronExpression, matchAmount, rejectLimit, answerTimeoutDays, placementTimeoutDays },
     });
-    
+
     // Also re-initialize the cron job with the new expression
     const { initCron } = require('../jobs/matcher');
     initCron();
-    
+
     res.json({ success: true, settings });
   } catch (err) {
     console.error(err);

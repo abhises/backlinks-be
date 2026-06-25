@@ -19,7 +19,7 @@ const sendWelcomeEmail = async (email, name) => {
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #333; background-color: #f9f9f9; border-radius: 8px;">
           <div style="text-align: center; margin-bottom: 20px;">
-            <img src="cid:logo" alt="SerpSupport Logo" style="width: 80px; height: auto;" />
+            <img src="https://www.serpsupport.com/icon.png" alt="SerpSupport Logo" style="width: 80px; height: auto;" />
           </div>
           <div style="background-color: #ffffff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
             <h1 style="color: #00b899; font-size: 24px; margin-top: 0; text-align: center;">Welcome, ${name}! 🎉</h1>
@@ -33,14 +33,7 @@ const sendWelcomeEmail = async (email, name) => {
             <p>&copy; ${new Date().getFullYear()} SerpSupport. All rights reserved.</p>
           </div>
         </div>
-      `,
-      attachments: [
-        {
-          filename: 'icon.png',
-          path: require('path').resolve(__dirname, '../../../backlink-fe/src/app/icon.png'),
-          cid: 'logo' // same cid value as in the html img src
-        }
-      ]
+      `
     });
     console.log("Message sent: %s", info.messageId);
   } catch (error) {
@@ -59,7 +52,7 @@ const sendNewMatchEmail = async (email, name, isGiver, otherDomain) => {
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #333; background-color: #f9f9f9; border-radius: 8px;">
           <div style="text-align: center; margin-bottom: 20px;">
-            <img src="cid:logo" alt="SerpSupport Logo" style="width: 80px; height: auto;" />
+            <img src="https://www.serpsupport.com/icon.png" alt="SerpSupport Logo" style="width: 80px; height: auto;" />
           </div>
           <div style="background-color: #ffffff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
             <h1 style="color: #00b899; font-size: 24px; margin-top: 0; text-align: center;">New Connection Match! 🔗</h1>
@@ -74,14 +67,7 @@ const sendNewMatchEmail = async (email, name, isGiver, otherDomain) => {
             <p>&copy; ${new Date().getFullYear()} SerpSupport. All rights reserved.</p>
           </div>
         </div>
-      `,
-      attachments: [
-        {
-          filename: 'icon.png',
-          path: require('path').resolve(__dirname, '../../../backlink-fe/src/app/icon.png'),
-          cid: 'logo'
-        }
-      ]
+      `
     });
     console.log("Match email sent: %s", info.messageId);
   } catch (error) {
@@ -98,7 +84,7 @@ const sendConnectionAcceptedEmail = async (email, name, acceptedDomain) => {
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #333; background-color: #f9f9f9; border-radius: 8px;">
           <div style="text-align: center; margin-bottom: 20px;">
-            <img src="cid:logo" alt="SerpSupport Logo" style="width: 80px; height: auto;" />
+            <img src="https://www.serpsupport.com/icon.png" alt="SerpSupport Logo" style="width: 80px; height: auto;" />
           </div>
           <div style="background-color: #ffffff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
             <h1 style="color: #00b899; font-size: 24px; margin-top: 0; text-align: center;">Connection Accepted! ✅</h1>
@@ -113,14 +99,7 @@ const sendConnectionAcceptedEmail = async (email, name, acceptedDomain) => {
             <p>&copy; ${new Date().getFullYear()} SerpSupport. All rights reserved.</p>
           </div>
         </div>
-      `,
-      attachments: [
-        {
-          filename: 'icon.png',
-          path: require('path').resolve(__dirname, '../../../backlink-fe/src/app/icon.png'),
-          cid: 'logo'
-        }
-      ]
+      `
     });
     console.log("Connection accepted email sent: %s", info.messageId);
   } catch (error) {

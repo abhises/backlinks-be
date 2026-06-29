@@ -18,6 +18,7 @@ const transporter = nodemailer.createTransport({
 });
 
 const sendWelcomeEmail = async (email, name) => {
+  if (process.env.NODE_ENV !== 'production') return;
   try {
     const info = await transporter.sendMail({
       from: `"SerpSupport" <${process.env.EMAIL_USER}>`,
@@ -49,6 +50,7 @@ const sendWelcomeEmail = async (email, name) => {
 };
 
 const sendNewMatchEmail = async (email, name, isGiver, otherDomain) => {
+  if (process.env.NODE_ENV !== 'production') return;
   try {
     const roleText = isGiver ? `give a backlink to ${otherDomain}` : `receive a backlink from ${otherDomain}`;
     
@@ -83,6 +85,7 @@ const sendNewMatchEmail = async (email, name, isGiver, otherDomain) => {
 };
 
 const sendConnectionAcceptedEmail = async (email, name, acceptedDomain) => {
+  if (process.env.NODE_ENV !== 'production') return;
   try {
     const info = await transporter.sendMail({
       from: `"SerpSupport" <${process.env.EMAIL_USER}>`,

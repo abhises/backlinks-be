@@ -7,8 +7,9 @@ const createWorkspace = async (req, res) => {
     return res.status(400).json({ error: 'Domain, website name, and description are required' });
   }
 
-  if (!domain.toLowerCase().trim().endsWith('.com')) {
-    return res.status(400).json({ error: 'Only .com domains are allowed.' });
+  const cleanDomain = domain.toLowerCase().trim().replace(/^https?:\/\//, '').replace(/\/$/, '');
+  if (!/^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(cleanDomain)) {
+    return res.status(400).json({ error: 'Please enter a valid domain.' });
   }
 
   try {
@@ -84,8 +85,11 @@ const updateMyWorkspace = async (req, res) => {
       return res.status(403).json({ error: 'Only owners can update workspace details' });
     }
 
-    if (domain && !domain.toLowerCase().trim().endsWith('.com')) {
-      return res.status(400).json({ error: 'Only .com domains are allowed.' });
+    if (domain) {
+      const cleanDomain = domain.toLowerCase().trim().replace(/^https?:\/\//, '').replace(/\/$/, '');
+      if (!/^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(cleanDomain)) {
+        return res.status(400).json({ error: 'Please enter a valid domain.' });
+      }
     }
 
     const updated = await prisma.workspace.update({

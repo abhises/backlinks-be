@@ -117,8 +117,47 @@ const sendConnectionAcceptedEmail = async (email, name, acceptedDomain) => {
   }
 };
 
+const sendPasswordResetEmail = async (email, name, resetLink) => {
+  console.log(`\n========================================`);
+  console.log(`[PASSWORD RESET LINK FOR ${email}]:`);
+  console.log(`${resetLink}`);
+  console.log(`========================================\n`);
+  if (process.env.NODE_ENV !== 'production') return;
+  try {
+    const info = await transporter.sendMail({
+      from: `"SerpSupport" <${process.env.EMAIL_USER}>`,
+      to: email,
+      subject: "Reset your SerpSupport Password 🔒",
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #333; background-color: #f9f9f9; border-radius: 8px;">
+          <div style="text-align: center; margin-bottom: 20px;">
+            <img src="https://www.serpsupport.com/icon.png" alt="SerpSupport Logo" style="width: 80px; height: auto;" />
+          </div>
+          <div style="background-color: #ffffff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+            <h1 style="color: #00b899; font-size: 24px; margin-top: 0; text-align: center;">Password Reset Request 🔒</h1>
+            <p style="font-size: 16px; line-height: 1.6;">Hi ${name || 'there'},</p>
+            <p style="font-size: 16px; line-height: 1.6;">We received a request to reset the password for your SerpSupport account. If you didn't make this request, you can safely ignore this email.</p>
+            <p style="font-size: 16px; line-height: 1.6;">To set a new password, click the button below. This link will expire in <strong>1 hour</strong>.</p>
+            <div style="text-align: center; margin-top: 30px; margin-bottom: 20px;">
+              <a href="${resetLink}" style="display: inline-block; background-color: #00b899; color: #ffffff; text-decoration: none; padding: 14px 28px; border-radius: 6px; font-weight: bold; font-size: 16px; box-shadow: 0 2px 4px rgba(0,184,153,0.2);">Reset Password</a>
+            </div>
+            <p style="font-size: 14px; color: #777; line-height: 1.5; text-align: center;">Or copy and paste this link into your browser:<br/><a href="${resetLink}" style="color: #00b899; word-break: break-all;">${resetLink}</a></p>
+          </div>
+          <div style="text-align: center; margin-top: 20px; color: #888; font-size: 12px;">
+            <p>&copy; ${new Date().getFullYear()} SerpSupport. All rights reserved.</p>
+          </div>
+        </div>
+      `
+    });
+    console.log("Password reset email sent: %s", info.messageId);
+  } catch (error) {
+    console.error("Error sending password reset email:", error);
+  }
+};
+
 module.exports = {
   sendWelcomeEmail,
   sendNewMatchEmail,
   sendConnectionAcceptedEmail,
+  sendPasswordResetEmail,
 };

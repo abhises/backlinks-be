@@ -13,6 +13,17 @@ jobs:
       - name: Checkout Source Code
         uses: actions/checkout@v4
 
+      - name: Copy files to Cloudways via SCP
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          port: 22
+          source: "."
+          target: "/home/489042.cloudwaysapps.com/sspcnhpfsd/public_html"
+          overwrite: true
+
       - name: SSH and Remote Deploy Execution
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -32,7 +43,8 @@ jobs:
             # 2. Step into your public web application root space
             cd /home/489042.cloudwaysapps.com/sspcnhpfsd/public_html
             
-            # (Git pull removed because GitHub Action SCP already uploaded the files)
+            # Pull latest changes if git is initialized
+            git pull origin main || true
             
             # 4. Synchronize application package trees and update databases
             npm install --cache=./.local-cache --no-audit --no-fund

@@ -36,8 +36,8 @@ jobs:
             
             # 4. Synchronize application package trees and update databases
             npm install --cache=./.local-cache --no-audit --no-fund
-            npx prisma generate
             npx prisma db push --accept-data-loss
+            npx prisma generate
             
             # 5. Bring down and bounce your PM2 environment smoothly
             export PM2_HOME="/home/489042.cloudwaysapps.com/sspcnhpfsd/public_html/.pm2"

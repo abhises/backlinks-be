@@ -16,12 +16,16 @@ const allowedOrigins = process.env.FRONTEND_URL
   ? process.env.FRONTEND_URL.split(',').map(url => url.trim().replace(/\/$/, ''))
   : ['http://localhost:3000'];
 
-// Explicitly ensure both variations are present if serpsupport is declared
-if (allowedOrigins.includes('https://www.serpsupport.com') && !allowedOrigins.includes('https://serpsupport.com')) {
-  allowedOrigins.push('https://serpsupport.com');
+// Explicitly ensure variations and subdomains are present if serpsupport is declared
+if (allowedOrigins.some(url => url.includes('serpsupport.com'))) {
+  ['https://serpsupport.com', 'https://www.serpsupport.com', 'https://fi.serpsupport.com', 'https://nl.serpsupport.com'].forEach(url => {
+    if (!allowedOrigins.includes(url)) allowedOrigins.push(url);
+  });
 }
-if (allowedOrigins.includes('https://serpsupport.com') && !allowedOrigins.includes('https://www.serpsupport.com')) {
-  allowedOrigins.push('https://www.serpsupport.com');
+if (allowedOrigins.some(url => url.includes('localhost:3000'))) {
+  ['http://localhost:3000', 'http://www.localhost:3000', 'http://fi.localhost:3000', 'http://nl.localhost:3000'].forEach(url => {
+    if (!allowedOrigins.includes(url)) allowedOrigins.push(url);
+  });
 }
 
 app.use(cors({
@@ -29,7 +33,14 @@ app.use(cors({
     // Normalizing browser origin string to strip trailing slashes just in case
     const normalizedOrigin = origin ? origin.replace(/\/$/, '') : null;
 
-    if (!normalizedOrigin || allowedOrigins.includes(normalizedOrigin)) {
+    const isSubdomain = normalizedOrigin && (
+      normalizedOrigin.endsWith('.serpsupport.com') ||
+      normalizedOrigin.endsWith('.localhost:3000') ||
+      normalizedOrigin === 'https://serpsupport.com' ||
+      normalizedOrigin === 'http://localhost:3000'
+    );
+
+    if (!normalizedOrigin || allowedOrigins.includes(normalizedOrigin) || isSubdomain) {
       callback(null, true);
     } else {
       console.error(`[CORS Blocked] Origin: ${origin} was not found in:`, allowedOrigins);

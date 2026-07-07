@@ -23,7 +23,7 @@ jobs:
           source: "src,prisma,package.json,package-lock.json,prisma.config.ts"
           target: "/home/489042.cloudwaysapps.com/sspcnhpfsd/public_html"
           overwrite: true
-          tar_exec: "/home/489042.cloudwaysapps.com/sspcnhpfsd/public_html/tar-wrapper.sh"
+          tar_tmp_path: "/home/489042.cloudwaysapps.com/sspcnhpfsd/public_html/deploy.tar.gz"
 
       - name: SSH and Remote Deploy Execution
         uses: appleboy/ssh-action@v1.0.3

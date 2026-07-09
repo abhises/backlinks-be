@@ -67,8 +67,8 @@ const register = async (req, res) => {
       data: { name, email, hashedPassword, language },
     });
 
-    // Send welcome email
-    await sendWelcomeEmail(user.email, user.name);
+    // Send welcome email asynchronously without blocking registration
+    sendWelcomeEmail(user.email, user.name).catch(err => console.error('Non-fatal: Error sending welcome email:', err.message || err));
 
     const token = jwt.sign(
       { userId: user.id, email: user.email, name: user.name, role: user.role, language: user.language },
@@ -167,8 +167,8 @@ const google = async (req, res) => {
         },
       });
 
-      // Send welcome email
-      await sendWelcomeEmail(user.email, user.name);
+      // Send welcome email asynchronously without blocking registration
+      sendWelcomeEmail(user.email, user.name).catch(err => console.error('Non-fatal: Error sending welcome email:', err.message || err));
     }
 
     // Generate JWT token

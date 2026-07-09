@@ -238,7 +238,7 @@ const forgotPassword = async (req, res) => {
       
     const resetLink = `${frontendUrl}/reset-password?token=${resetToken}`;
 
-    await sendPasswordResetEmail(user.email, user.name, resetLink);
+    sendPasswordResetEmail(user.email, user.name, resetLink).catch(err => console.error('Non-fatal: Error sending password reset email:', err.message || err));
 
     res.json({ message: 'If an account exists, a reset link has been sent.' });
   } catch (err) {

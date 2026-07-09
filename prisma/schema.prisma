@@ -12,6 +12,7 @@ model User {
   email          String        @unique
   hashedPassword String?
   role             String        @default("CLIENT") // ADMIN | CLIENT
+  language         String        @default("en")     // nl | fi | en
   resetToken       String?       @unique
   resetTokenExpiry DateTime?
   createdAt        DateTime      @default(now())

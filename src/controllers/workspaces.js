@@ -21,6 +21,9 @@ const createWorkspace = async (req, res) => {
       return res.status(409).json({ error: 'User already has a workspace' });
     }
 
+    const user = await prisma.user.findUnique({ where: { id: req.user.userId }, select: { language: true } });
+    const wsLanguage = language || user?.language || 'en';
+
     const workspace = await prisma.workspace.create({
       data: {
         domain: domain.toLowerCase().replace(/^https?:\/\//, '').replace(/\/$/, ''),
@@ -28,7 +31,7 @@ const createWorkspace = async (req, res) => {
         description,
         niche: niche || null,
         country: country || null,
-        language: language || null,
+        language: wsLanguage,
         monthlyTraffic: monthlyTraffic ? parseInt(monthlyTraffic) : null,
         teamMembers: {
           create: { userId: req.user.userId, role: 'OWNER' },
@@ -64,8 +67,32 @@ const getMyWorkspace = async (req, res) => {
 
 const getAllWorkspaces = async (req, res) => {
   try {
+    const user = await prisma.user.findUnique({
+      where: { id: req.user.userId },
+      select: { language: true, role: true },
+    });
+
+    const targetLang = req.query.language || user?.language || 'en';
+    const whereClause = (user?.role === 'ADMIN' && !req.query.language) ? {} : {
+      OR: [
+        {
+          teamMembers: {
+            some: {
+              user: {
+                language: targetLang,
+              },
+            },
+          },
+        },
+        {
+          language: targetLang,
+        },
+      ],
+    };
+
     const workspaces = await prisma.workspace.findMany({
-      select: { id: true, domain: true, websiteName: true, description: true, niche: true, country: true },
+      where: whereClause,
+      select: { id: true, domain: true, websiteName: true, description: true, niche: true, country: true, language: true },
     });
     res.json({ workspaces });
   } catch (err) {

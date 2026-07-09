@@ -36,6 +36,19 @@ const createThread = async (req, res) => {
     });
     if (existing) return res.status(409).json({ error: 'Thread already exists between these workspaces' });
 
+    const giverUser = await prisma.user.findUnique({ where: { id: req.user.userId }, select: { language: true } });
+    const receiverOwner = await prisma.teamMember.findFirst({
+      where: { workspaceId: receiverWorkspaceId, role: 'OWNER' },
+      include: { user: { select: { language: true } }, workspace: { select: { language: true } } }
+    });
+
+    const giverLang = giverUser?.language || 'en';
+    const receiverLang = receiverOwner?.user?.language || receiverOwner?.workspace?.language || 'en';
+
+    if (giverLang !== receiverLang) {
+      return res.status(403).json({ error: `You can only connect with websites that match your language (${giverLang.toUpperCase()})` });
+    }
+
     const thread = await prisma.exchangeThread.create({
       data: {
         giverWorkspaceId: member.workspaceId,

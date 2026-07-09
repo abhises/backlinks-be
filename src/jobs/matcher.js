@@ -94,13 +94,15 @@ const runWeeklyMatching = async () => {
       
       let poolExhaustedWarningSent = false;
       
+      const wsLang = ws.language || ws.teamMembers?.[0]?.user?.language || 'en';
       const neededGiving = Math.max(0, matchAmount - activeGivingCounts[ws.id]);
 
       if (neededGiving > 0) {
-        // Only consider receivers who haven't hit their receiving quota yet
-        const potentialReceivers = workspaces.filter(w => 
-          !excludedReceivers.has(w.id) && activeReceivingCounts[w.id] < matchAmount
-        );
+        // Only consider receivers who haven't hit their receiving quota yet and match language
+        const potentialReceivers = workspaces.filter(w => {
+          const wLang = w.language || w.teamMembers?.[0]?.user?.language || 'en';
+          return !excludedReceivers.has(w.id) && activeReceivingCounts[w.id] < matchAmount && wLang === wsLang;
+        });
         if (potentialReceivers.length === 0 && !poolExhaustedWarningSent) {
           wsManager.sendNotification(ws.id, {
             type: 'system',
@@ -168,10 +170,11 @@ const runWeeklyMatching = async () => {
       const neededReceiving = Math.max(0, matchAmount - activeReceivingCounts[ws.id]);
 
       if (neededReceiving > 0) {
-        // Only consider givers who haven't hit their giving quota yet
-        const potentialGivers = workspaces.filter(w => 
-          !excludedGivers.has(w.id) && activeGivingCounts[w.id] < matchAmount
-        );
+        // Only consider givers who haven't hit their giving quota yet and match language
+        const potentialGivers = workspaces.filter(w => {
+          const wLang = w.language || w.teamMembers?.[0]?.user?.language || 'en';
+          return !excludedGivers.has(w.id) && activeGivingCounts[w.id] < matchAmount && wLang === wsLang;
+        });
         if (potentialGivers.length === 0 && !poolExhaustedWarningSent) {
           wsManager.sendNotification(ws.id, {
             type: 'system',

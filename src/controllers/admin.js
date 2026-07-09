@@ -61,13 +61,13 @@ const getNotifications = async (req, res) => {
 const getUsers = async (req, res) => {
   try {
     const users = await prisma.user.findMany({
-      where: { role: { not: 'ADMIN' } },
       orderBy: { createdAt: 'desc' },
       select: {
         id: true,
         name: true,
         email: true,
         role: true,
+        language: true,
         createdAt: true,
         teamMemberships: {
           include: { workspace: true }
@@ -121,11 +121,11 @@ const getBacklinks = async (req, res) => {
 };
 
 const updateUser = async (req, res) => {
-  const { name, email, role } = req.body;
+  const { name, email, role, language } = req.body;
   try {
     const updated = await prisma.user.update({
       where: { id: req.params.id },
-      data: { name, email, role },
+      data: { name, email, role, language: language || undefined },
     });
     res.json({ user: updated });
   } catch (err) {

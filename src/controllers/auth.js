@@ -4,6 +4,21 @@ const crypto = require('crypto');
 const prisma = require('../lib/prisma');
 const { sendWelcomeEmail, sendPasswordResetEmail } = require('../lib/email');
 
+const getLanguageFromReq = (req) => {
+  if (req.body && req.body.language) {
+    const lang = String(req.body.language).toLowerCase().trim();
+    if (['nl', 'fi', 'en'].includes(lang)) return lang;
+  }
+  const originOrReferer = req.headers.origin || req.headers.referer || '';
+  if (/https?:\/\/fi\./i.test(originOrReferer) || /fi\.localhost/i.test(originOrReferer)) {
+    return 'fi';
+  }
+  if (/https?:\/\/nl\./i.test(originOrReferer) || /nl\.localhost/i.test(originOrReferer)) {
+    return 'nl';
+  }
+  return 'en';
+};
+
 const register = async (req, res) => {
   let { name, email, password } = req.body;
   if (!email || !password) {
@@ -17,23 +32,24 @@ const register = async (req, res) => {
     const existing = await prisma.user.findUnique({ where: { email } });
     if (existing) return res.status(409).json({ error: 'Email already registered' });
 
+    const language = getLanguageFromReq(req);
     const hashedPassword = await bcrypt.hash(password, 12);
     const user = await prisma.user.create({
-      data: { name, email, hashedPassword },
+      data: { name, email, hashedPassword, language },
     });
 
     // Send welcome email
     await sendWelcomeEmail(user.email, user.name);
 
     const token = jwt.sign(
-      { userId: user.id, email: user.email, name: user.name, role: user.role },
+      { userId: user.id, email: user.email, name: user.name, role: user.role, language: user.language },
       process.env.JWT_SECRET,
       { expiresIn: '7d' }
     );
 
     res.status(201).json({
       token,
-      user: { id: user.id, name: user.name, email: user.email, role: user.role },
+      user: { id: user.id, name: user.name, email: user.email, role: user.role, language: user.language },
     });
   } catch (err) {
     console.error(err);
@@ -61,14 +77,14 @@ const login = async (req, res) => {
     if (!valid) return res.status(401).json({ error: 'Invalid credentials' });
 
     const token = jwt.sign(
-      { userId: user.id, email: user.email, name: user.name, role: user.role },
+      { userId: user.id, email: user.email, name: user.name, role: user.role, language: user.language || 'en' },
       process.env.JWT_SECRET,
       { expiresIn: '7d' }
     );
 
     res.json({
       token,
-      user: { id: user.id, name: user.name, email: user.email, role: user.role },
+      user: { id: user.id, name: user.name, email: user.email, role: user.role, language: user.language || 'en' },
     });
   } catch (err) {
     console.error(err);
@@ -102,12 +118,14 @@ const google = async (req, res) => {
     let user = await prisma.user.findUnique({ where: { email } });
 
     if (!user) {
+      const language = getLanguageFromReq(req);
       // Create a user without a password
       user = await prisma.user.create({
         data: {
           name: name || email.split('@')[0],
           email,
           hashedPassword: null,
+          language,
         },
       });
 
@@ -117,14 +135,14 @@ const google = async (req, res) => {
 
     // Generate JWT token
     const token = jwt.sign(
-      { userId: user.id, email: user.email, name: user.name, role: user.role },
+      { userId: user.id, email: user.email, name: user.name, role: user.role, language: user.language || 'en' },
       process.env.JWT_SECRET,
       { expiresIn: '7d' }
     );
 
     res.json({
       token,
-      user: { id: user.id, name: user.name, email: user.email, role: user.role },
+      user: { id: user.id, name: user.name, email: user.email, role: user.role, language: user.language || 'en' },
     });
   } catch (err) {
     console.error('Google Auth Error:', err);
@@ -136,7 +154,7 @@ const getMe = async (req, res) => {
   try {
     const user = await prisma.user.findUnique({
       where: { id: req.user.userId },
-      select: { id: true, name: true, email: true, role: true, createdAt: true },
+      select: { id: true, name: true, email: true, role: true, language: true, createdAt: true },
     });
     if (!user) return res.status(404).json({ error: 'User not found' });
 

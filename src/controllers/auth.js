@@ -19,6 +19,34 @@ const getLanguageFromReq = (req) => {
   return 'en';
 };
 
+const checkDomainMatch = (user, req) => {
+  if (!user || user.role === 'ADMIN') return null;
+  const requestLang = getLanguageFromReq(req);
+  const userLang = user.language || 'en';
+  if (userLang !== requestLang) {
+    const originOrReferer = req.headers.origin || req.headers.referer || '';
+    const isLocal = /localhost/i.test(originOrReferer) || /127\.0\.0\.1/.test(originOrReferer);
+    
+    let targetDomain = '';
+    if (isLocal) {
+      if (userLang === 'nl') targetDomain = 'http://nl.localhost:3000/auth?mode=login';
+      else if (userLang === 'fi') targetDomain = 'http://fi.localhost:3000/auth?mode=login';
+      else targetDomain = 'http://localhost:3000/auth?mode=login';
+    } else {
+      if (userLang === 'nl') targetDomain = 'https://nl.serpsupport.com/auth?mode=login';
+      else if (userLang === 'fi') targetDomain = 'https://fi.serpsupport.com/auth?mode=login';
+      else targetDomain = 'https://serpsupport.com/auth?mode=login';
+    }
+
+    return {
+      error: `Your account belongs to the ${userLang.toUpperCase()} domain (${targetDomain}). You can only log in on your registered language domain.`,
+      requiredLanguage: userLang,
+      targetDomain,
+    };
+  }
+  return null;
+};
+
 const register = async (req, res) => {
   let { name, email, password } = req.body;
   if (!email || !password) {
@@ -76,6 +104,9 @@ const login = async (req, res) => {
     const valid = await bcrypt.compare(password, user.hashedPassword);
     if (!valid) return res.status(401).json({ error: 'Invalid credentials' });
 
+    const domainMismatch = checkDomainMatch(user, req);
+    if (domainMismatch) return res.status(403).json(domainMismatch);
+
     const token = jwt.sign(
       { userId: user.id, email: user.email, name: user.name, role: user.role, language: user.language || 'en' },
       process.env.JWT_SECRET,
@@ -117,7 +148,10 @@ const google = async (req, res) => {
     // Check if user already exists
     let user = await prisma.user.findUnique({ where: { email } });
 
-    if (!user) {
+    if (user) {
+      const domainMismatch = checkDomainMatch(user, req);
+      if (domainMismatch) return res.status(403).json(domainMismatch);
+    } else {
       const language = getLanguageFromReq(req);
       // Create a user without a password
       user = await prisma.user.create({

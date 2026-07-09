@@ -52,13 +52,14 @@ const register = async (req, res) => {
   if (!email || !password) {
     return res.status(400).json({ error: 'Email and password are required' });
   }
+  email = email.toLowerCase().trim();
   if (!name || !name.trim()) {
     name = email.split('@')[0];
   }
 
   try {
     const existing = await prisma.user.findUnique({ where: { email } });
-    if (existing) return res.status(409).json({ error: 'Email already registered' });
+    if (existing) return res.status(409).json({ error: 'Email address already exists' });
 
     const language = getLanguageFromReq(req);
     const hashedPassword = await bcrypt.hash(password, 12);
@@ -81,6 +82,9 @@ const register = async (req, res) => {
     });
   } catch (err) {
     console.error(err);
+    if (err.code === 'P2002') {
+      return res.status(409).json({ error: 'Email address already exists' });
+    }
     res.status(500).json({ error: 'Server error' });
   }
 };
@@ -180,6 +184,9 @@ const google = async (req, res) => {
     });
   } catch (err) {
     console.error('Google Auth Error:', err);
+    if (err.code === 'P2002') {
+      return res.status(409).json({ error: 'Email address already exists' });
+    }
     res.status(500).json({ error: 'Server error during Google authentication' });
   }
 };

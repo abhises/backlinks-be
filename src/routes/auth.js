@@ -10,5 +10,6 @@ router.post('/google', authController.google);
 router.post('/forgot-password', authController.forgotPassword);
 router.post('/reset-password', authController.resetPassword);
 router.get('/me', authMiddleware, authController.getMe);
+router.patch('/language', authMiddleware, authController.updateLanguage);
 
 module.exports = router;

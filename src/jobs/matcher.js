@@ -9,6 +9,7 @@ const runWeeklyMatching = async () => {
     // Fetch workspaces that belong ONLY to non-admin users
     const workspaces = await prisma.workspace.findMany({
       where: {
+        verificationStatus: { not: 'FLAGGED' },
         teamMembers: {
           some: {
             user: {

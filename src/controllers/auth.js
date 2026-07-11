@@ -286,6 +286,35 @@ const resetPassword = async (req, res) => {
   }
 };
 
+const updateLanguage = async (req, res) => {
+  const { language } = req.body;
+  if (!language || !['en', 'fi', 'nl'].includes(String(language).toLowerCase().trim())) {
+    return res.status(400).json({ error: 'Valid language (en, fi, nl) is required' });
+  }
+
+  try {
+    const cleanLang = String(language).toLowerCase().trim();
+    const user = await prisma.user.update({
+      where: { id: req.user.userId },
+      data: { language: cleanLang },
+    });
+
+    const token = jwt.sign(
+      { userId: user.id, email: user.email, name: user.name, role: user.role, language: user.language || 'en' },
+      process.env.JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+
+    res.json({
+      token,
+      user: { id: user.id, name: user.name, email: user.email, role: user.role, language: user.language || 'en' },
+    });
+  } catch (err) {
+    console.error('Error in updateLanguage:', err);
+    res.status(500).json({ error: 'Server error updating language' });
+  }
+};
+
 module.exports = {
   register,
   login,
@@ -293,4 +322,5 @@ module.exports = {
   getMe,
   forgotPassword,
   resetPassword,
+  updateLanguage,
 };

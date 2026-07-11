@@ -1,4 +1,5 @@
 const prisma = require('../lib/prisma');
+const { verifyWorkspaceLanguage } = require('../lib/verifier');
 
 const createWorkspace = async (req, res) => {
   const { domain, websiteName, description, niche, country, language, monthlyTraffic } = req.body;
@@ -39,6 +40,20 @@ const createWorkspace = async (req, res) => {
       },
       include: { teamMembers: true },
     });
+
+    // Asynchronously audit site language and hreflang tags in background
+    verifyWorkspaceLanguage(cleanDomain, wsLanguage).then(async (audit) => {
+      await prisma.workspace.update({
+        where: { id: workspace.id },
+        data: {
+          verificationStatus: audit.verificationStatus,
+          detectedLanguage: audit.detectedLanguage,
+          hreflangTags: audit.hreflangTags,
+          lastVerifiedAt: new Date(),
+          verificationNotes: audit.verificationNotes,
+        },
+      });
+    }).catch(e => console.error('Background language audit error:', e));
 
     res.status(201).json({ workspace });
   } catch (err) {
@@ -92,7 +107,7 @@ const getAllWorkspaces = async (req, res) => {
 
     const workspaces = await prisma.workspace.findMany({
       where: whereClause,
-      select: { id: true, domain: true, websiteName: true, description: true, niche: true, country: true, language: true },
+      select: { id: true, domain: true, websiteName: true, description: true, niche: true, country: true, language: true, verificationStatus: true, detectedLanguage: true, hreflangTags: true, lastVerifiedAt: true, verificationNotes: true },
     });
     res.json({ workspaces });
   } catch (err) {
@@ -129,6 +144,22 @@ const updateMyWorkspace = async (req, res) => {
       },
     });
 
+    if (domain) {
+      const cleanDomain = domain.toLowerCase().trim().replace(/^https?:\/\//, '').replace(/\/$/, '');
+      verifyWorkspaceLanguage(cleanDomain, updated.language || 'en').then(async (audit) => {
+        await prisma.workspace.update({
+          where: { id: updated.id },
+          data: {
+            verificationStatus: audit.verificationStatus,
+            detectedLanguage: audit.detectedLanguage,
+            hreflangTags: audit.hreflangTags,
+            lastVerifiedAt: new Date(),
+            verificationNotes: audit.verificationNotes,
+          },
+        });
+      }).catch(e => console.error('Background update audit error:', e));
+    }
+
     res.json({ workspace: updated });
   } catch (err) {
     if (err.code === 'P2002') {
@@ -139,9 +170,41 @@ const updateMyWorkspace = async (req, res) => {
   }
 };
 
+const verifyMyWorkspace = async (req, res) => {
+  try {
+    const member = await prisma.teamMember.findFirst({
+      where: { userId: req.user.userId },
+      include: { workspace: true },
+    });
+
+    if (!member) return res.status(404).json({ error: 'No workspace found' });
+
+    const ws = member.workspace;
+    const targetLang = ws.language || 'en';
+    const audit = await verifyWorkspaceLanguage(ws.domain, targetLang);
+
+    const updated = await prisma.workspace.update({
+      where: { id: ws.id },
+      data: {
+        verificationStatus: audit.verificationStatus,
+        detectedLanguage: audit.detectedLanguage,
+        hreflangTags: audit.hreflangTags,
+        lastVerifiedAt: new Date(),
+        verificationNotes: audit.verificationNotes,
+      },
+    });
+
+    res.json({ workspace: updated, audit });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error during language audit' });
+  }
+};
+
 module.exports = {
   createWorkspace,
   getMyWorkspace,
   getAllWorkspaces,
   updateMyWorkspace,
+  verifyMyWorkspace,
 };

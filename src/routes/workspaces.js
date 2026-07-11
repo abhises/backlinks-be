@@ -8,5 +8,6 @@ router.post('/', authMiddleware, workspacesController.createWorkspace);
 router.get('/mine', authMiddleware, workspacesController.getMyWorkspace);
 router.get('/', authMiddleware, workspacesController.getAllWorkspaces);
 router.patch('/mine', authMiddleware, workspacesController.updateMyWorkspace);
+router.post('/verify', authMiddleware, workspacesController.verifyMyWorkspace);
 
 module.exports = router;

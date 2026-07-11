@@ -28,9 +28,14 @@ model Workspace {
   description    String
   niche          String?
   country        String?
-  language       String?
-  monthlyTraffic Int?
-  createdAt      DateTime @default(now())
+  language           String?
+  monthlyTraffic     Int?
+  verificationStatus String    @default("UNVERIFIED") // VERIFIED | FLAGGED | UNVERIFIED | FAILED
+  detectedLanguage   String?
+  hreflangTags       String?
+  lastVerifiedAt     DateTime?
+  verificationNotes  String?
+  createdAt          DateTime  @default(now())
 
   teamMembers            TeamMember[]
   giverThreads           ExchangeThread[] @relation("GiverWorkspace")

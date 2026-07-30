@@ -104,7 +104,7 @@ const createOrUpdateLink = async (req, res) => {
       wsManager.sendNotification(receiverWorkspaceId, {
         type: 'link_placed',
         threadId: threadId || '',
-        body: `${member.workspace.domain} has added the backlink details. Check your Dashboard!`,
+        giverDomain: member.workspace.domain,
       });
     }
 

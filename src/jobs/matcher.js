@@ -106,9 +106,7 @@ const runWeeklyMatching = async () => {
         });
         if (potentialReceivers.length === 0 && !poolExhaustedWarningSent) {
           wsManager.sendNotification(ws.id, {
-            type: 'system',
-            title: 'No New Matches Found',
-            body: "We couldn't find a new match for you this cycle. You'll be automatically matched as new websites join the network."
+            type: 'no_matches',
           });
           poolExhaustedWarningSent = true;
         }
@@ -142,15 +140,15 @@ const runWeeklyMatching = async () => {
           wsManager.sendNotification(ws.id, {
             type: 'new_thread',
             threadId: thread.id,
-            title: 'New Connection Match!',
-            body: `You have been matched to give a backlink to ${rec.domain}. Check your inbox!`
+            direction: 'give',
+            otherDomain: rec.domain,
           });
 
           wsManager.sendNotification(rec.id, {
             type: 'new_thread',
             threadId: thread.id,
-            title: 'New Connection Match!',
-            body: `You have been matched to receive a backlink from ${ws.domain}. Check your inbox!`
+            direction: 'receive',
+            otherDomain: ws.domain,
           });
           
           const wsOwner = ws.teamMembers?.[0]?.user;
@@ -178,9 +176,7 @@ const runWeeklyMatching = async () => {
         });
         if (potentialGivers.length === 0 && !poolExhaustedWarningSent) {
           wsManager.sendNotification(ws.id, {
-            type: 'system',
-            title: 'No New Matches Found',
-            body: "We couldn't find a new match for you this cycle. You'll be automatically matched as new websites join the network."
+            type: 'no_matches',
           });
           poolExhaustedWarningSent = true;
         }
@@ -214,15 +210,15 @@ const runWeeklyMatching = async () => {
           wsManager.sendNotification(giv.id, {
             type: 'new_thread',
             threadId: thread.id,
-            title: 'New Connection Match!',
-            body: `You have been matched to give a backlink to ${ws.domain}. Check your inbox!`
+            direction: 'give',
+            otherDomain: ws.domain,
           });
 
           wsManager.sendNotification(ws.id, {
             type: 'new_thread',
             threadId: thread.id,
-            title: 'New Connection Match!',
-            body: `You have been matched to receive a backlink from ${giv.domain}. Check your inbox!`
+            direction: 'receive',
+            otherDomain: giv.domain,
           });
           
           const givOwner = giv.teamMembers?.[0]?.user;

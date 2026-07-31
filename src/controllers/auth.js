@@ -76,8 +76,12 @@ const register = async (req, res) => {
       { expiresIn: '7d' }
     );
 
-    res.status(201).json({
-      token,
+    res.status(201).cookie('token', token, {
+      expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      httpOnly: true,
+      secure: true,
+      sameSite: 'none'
+    }).json({
       user: { id: user.id, name: user.name, email: user.email, role: user.role, language: user.language },
     });
   } catch (err) {
@@ -117,8 +121,12 @@ const login = async (req, res) => {
       { expiresIn: '7d' }
     );
 
-    res.json({
-      token,
+    res.cookie('token', token, {
+      expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      httpOnly: true,
+      secure: true,
+      sameSite: 'none'
+    }).json({
       user: { id: user.id, name: user.name, email: user.email, role: user.role, language: user.language || 'en' },
     });
   } catch (err) {
@@ -178,8 +186,12 @@ const google = async (req, res) => {
       { expiresIn: '7d' }
     );
 
-    res.json({
-      token,
+    res.cookie('token', token, {
+      expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      httpOnly: true,
+      secure: true,
+      sameSite: 'none'
+    }).json({
       user: { id: user.id, name: user.name, email: user.email, role: user.role, language: user.language || 'en' },
     });
   } catch (err) {
@@ -305,14 +317,28 @@ const updateLanguage = async (req, res) => {
       { expiresIn: '7d' }
     );
 
-    res.json({
-      token,
+    res.cookie('token', token, {
+      expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      httpOnly: true,
+      secure: true,
+      sameSite: 'none'
+    }).json({
       user: { id: user.id, name: user.name, email: user.email, role: user.role, language: user.language || 'en' },
     });
   } catch (err) {
     console.error('Error in updateLanguage:', err);
     res.status(500).json({ error: 'Server error updating language' });
   }
+};
+
+const logout = (req, res) => {
+  res.cookie('token', 'none', {
+    expires: new Date(Date.now() + 10 * 1000),
+    httpOnly: true,
+    secure: true,
+    sameSite: 'none'
+  });
+  res.status(200).json({ success: true, message: 'User logged out successfully' });
 };
 
 module.exports = {
@@ -323,4 +349,5 @@ module.exports = {
   forgotPassword,
   resetPassword,
   updateLanguage,
+  logout
 };

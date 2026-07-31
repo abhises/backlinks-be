@@ -1,6 +1,13 @@
 const express = require('express');
 const authMiddleware = require('../middleware/auth');
 const adminController = require('../controllers/admin');
+const validate = require('../middleware/validate');
+const {
+  sendNotificationValidator,
+  updateUserValidator,
+  updateBacklinkValidator,
+  updateSettingsValidator
+} = require('../validators/adminValidator');
 
 const router = express.Router();
 
@@ -8,8 +15,6 @@ const router = express.Router();
 const adminMiddleware = (req, res, next) => {
   if (req.user.role !== 'ADMIN') {
     return res.status(403).json({ error: 'Access denied: Admins only' });
-  
-  
   }
   next();
 };
@@ -18,19 +23,19 @@ const adminMiddleware = (req, res, next) => {
 router.get('/stats', authMiddleware, adminMiddleware, adminController.getStats);
 
 // POST /api/admin/notifications
-router.post('/notifications', authMiddleware, adminMiddleware, adminController.sendNotification);
+router.post('/notifications', authMiddleware, adminMiddleware, sendNotificationValidator, validate, adminController.sendNotification);
 
 // GET /api/admin/notifications
 router.get('/notifications', authMiddleware, adminMiddleware, adminController.getNotifications);
 
 // GET /api/admin/users
 router.get('/users', authMiddleware, adminMiddleware, adminController.getUsers);
-router.put('/users/:id', authMiddleware, adminMiddleware, adminController.updateUser);
+router.put('/users/:id', authMiddleware, adminMiddleware, updateUserValidator, validate, adminController.updateUser);
 router.delete('/users/:id', authMiddleware, adminMiddleware, adminController.deleteUser);
 
 // GET /api/admin/backlinks
 router.get('/backlinks', authMiddleware, adminMiddleware, adminController.getBacklinks);
-router.put('/backlinks/:id', authMiddleware, adminMiddleware, adminController.updateBacklink);
+router.put('/backlinks/:id', authMiddleware, adminMiddleware, updateBacklinkValidator, validate, adminController.updateBacklink);
 router.delete('/backlinks/:id', authMiddleware, adminMiddleware, adminController.deleteBacklink);
 
 // POST /api/admin/trigger-matching
@@ -40,6 +45,6 @@ router.post('/trigger-matching', authMiddleware, adminMiddleware, adminControlle
 router.get('/settings', authMiddleware, adminMiddleware, adminController.getSettings);
 
 // PUT /api/admin/settings
-router.put('/settings', authMiddleware, adminMiddleware, adminController.updateSettings);
+router.put('/settings', authMiddleware, adminMiddleware, updateSettingsValidator, validate, adminController.updateSettings);
 
 module.exports = router;

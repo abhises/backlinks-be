@@ -1,6 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const cookieParser = require('cookie-parser');
 
 const authRoutes = require('./routes/auth');
 const workspaceRoutes = require('./routes/workspaces');
@@ -10,6 +11,9 @@ const linkRoutes = require('./routes/links');
 const notificationRoutes = require('./routes/notifications');
 
 const app = express();
+
+// Trust the reverse proxy (like Nginx) to get the real client IP from X-Forwarded-For headers
+app.set('trust proxy', 1);
 
 // Middleware - Parsed from env array, stripping trailing slashes for clean strict domain matching
 const allowedOrigins = process.env.FRONTEND_URL
@@ -52,6 +56,7 @@ app.use(cors({
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 
 // Health check
 app.get('/health', async (req, res) => {

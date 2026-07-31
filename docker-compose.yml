@@ -1,17 +1,18 @@
 version: '3.8'
 
 services:
-  postgres:
-    image: postgres:15-alpine
-    container_name: serp-postgres
-    ports:
-      - "5432:5432"
+  backlink-db:
+    image: mysql:8.0
+    command: --default-authentication-plugin=mysql_native_password
+    container_name: backlink-local-db
     environment:
-      POSTGRES_USER: serpuser
-      POSTGRES_PASSWORD: serppassword
-      POSTGRES_DB: serpdb
+      MYSQL_ROOT_PASSWORD: AAA
+      MYSQL_DATABASE: backlink_dev
+    ports:
+      - "3308:3306"
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - backlink_mysql_data:/var/lib/mysql
+    restart: unless-stopped
 
 volumes:
-  pgdata:
+  backlink_mysql_data:

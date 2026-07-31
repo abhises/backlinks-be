@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "mysql"
 }
 
 model User {
@@ -25,7 +25,7 @@ model Workspace {
   id             String   @id @default(uuid())
   domain         String   @unique
   websiteName    String
-  description    String
+  description    String   @db.Text
   niche          String?
   country        String?
   language           String?
@@ -34,7 +34,7 @@ model Workspace {
   detectedLanguage   String?
   hreflangTags       String?
   lastVerifiedAt     DateTime?
-  verificationNotes  String?
+  verificationNotes  String?    @db.Text
   createdAt          DateTime  @default(now())
 
   teamMembers            TeamMember[]
@@ -79,7 +79,7 @@ model ChatMessage {
   id           String   @id @default(uuid())
   threadId     String
   senderUserId String
-  messageText  String
+  messageText  String   @db.Text
   timestamp    DateTime @default(now())
 
   thread       ExchangeThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
@@ -91,8 +91,8 @@ model LinkPlacement {
   threadId            String?   @unique
   giverWorkspaceId    String
   receiverWorkspaceId String
-  sourceUrl           String
-  targetUrl           String
+  sourceUrl           String     @db.Text
+  targetUrl           String     @db.Text
   anchorText          String
   linkType            String    // GUEST_POST | NICHE_EDIT | IMAGE | OTHER
   status              String    @default("LIVE") // LIVE | REMOVED | DEPARTED
@@ -105,8 +105,8 @@ model LinkPlacement {
 
 model AdminNotification {
   id          String   @id @default(uuid())
-  title       String
-  description String
+  title       String      @db.Text
+  description String      @db.Text
   createdAt   DateTime @default(now())
 }
 
@@ -114,12 +114,12 @@ model Notification {
   id          String   @id @default(uuid())
   workspaceId String
   type        String
-  title       String?
-  body        String?
+  title       String?     @db.Text
+  body        String?     @db.Text
   link        String?
   read        Boolean  @default(false)
   createdAt   DateTime @default(now())
-  payload     String?  
+  payload     String?     @db.Text  
 
   workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
 }

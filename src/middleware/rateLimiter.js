@@ -8,7 +8,9 @@ const authLimiter = rateLimit({
     if (req.body && req.body.email) {
       return req.body.email.toLowerCase().trim();
     }
-    return req.ip;
+    // Prevent IPv6 express-rate-limit warning by bypassing their req.ip regex
+    const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+    return String(ip);
   },
   message: {
     error: 'Too many requests for this account, please try again after 15 minutes'

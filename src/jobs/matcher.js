@@ -154,11 +154,12 @@ const runWeeklyMatching = async () => {
           const wsOwner = ws.teamMembers?.[0]?.user;
           const recOwner = rec.teamMembers?.[0]?.user;
           if (wsOwner && !emailedUsers.has(wsOwner.email)) {
-            await sendNewMatchEmail(wsOwner.email, wsOwner.name, true, rec.domain);
+            await sendNewMatchEmail(wsOwner.email, wsOwner.name, true, rec.domain, wsOwner.language || wsLang);
             emailedUsers.add(wsOwner.email);
           }
           if (recOwner && !emailedUsers.has(recOwner.email)) {
-            await sendNewMatchEmail(recOwner.email, recOwner.name, false, ws.domain);
+            const recLang = recOwner.language || rec.language || 'en';
+            await sendNewMatchEmail(recOwner.email, recOwner.name, false, ws.domain, recLang);
             emailedUsers.add(recOwner.email);
           }
           
@@ -224,11 +225,12 @@ const runWeeklyMatching = async () => {
           const givOwner = giv.teamMembers?.[0]?.user;
           const wsOwnerRec = ws.teamMembers?.[0]?.user;
           if (givOwner && !emailedUsers.has(givOwner.email)) {
-            await sendNewMatchEmail(givOwner.email, givOwner.name, true, ws.domain);
+            const givLang = givOwner.language || giv.language || 'en';
+            await sendNewMatchEmail(givOwner.email, givOwner.name, true, ws.domain, givLang);
             emailedUsers.add(givOwner.email);
           }
           if (wsOwnerRec && !emailedUsers.has(wsOwnerRec.email)) {
-            await sendNewMatchEmail(wsOwnerRec.email, wsOwnerRec.name, false, giv.domain);
+            await sendNewMatchEmail(wsOwnerRec.email, wsOwnerRec.name, false, giv.domain, wsOwnerRec.language || wsLang);
             emailedUsers.add(wsOwnerRec.email);
           }
           

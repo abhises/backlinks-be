@@ -68,7 +68,7 @@ const register = async (req, res) => {
     });
 
     // Send welcome email asynchronously without blocking registration
-    sendWelcomeEmail(user.email, user.name).catch(err => console.error('Non-fatal: Error sending welcome email:', err.message || err));
+    sendWelcomeEmail(user.email, user.name, language).catch(err => console.error('Non-fatal: Error sending welcome email:', err.message || err));
 
     const token = jwt.sign(
       { userId: user.id, email: user.email, name: user.name, role: user.role, language: user.language },
@@ -176,7 +176,7 @@ const google = async (req, res) => {
       });
 
       // Send welcome email asynchronously without blocking registration
-      sendWelcomeEmail(user.email, user.name).catch(err => console.error('Non-fatal: Error sending welcome email:', err.message || err));
+      sendWelcomeEmail(user.email, user.name, language).catch(err => console.error('Non-fatal: Error sending welcome email:', err.message || err));
     }
 
     // Generate JWT token
@@ -244,13 +244,19 @@ const forgotPassword = async (req, res) => {
       data: { resetToken, resetTokenExpiry },
     });
 
-    const frontendUrl = process.env.NODE_ENV === 'production' 
-      ? 'https://www.serpsupport.com' 
+    const langDomains = {
+      en: 'https://www.serpsupport.com',
+      fi: 'https://fi.serpsupport.com',
+      nl: 'https://nl.serpsupport.com',
+    };
+    const userLangForReset = user.language || 'en';
+    const frontendUrl = process.env.NODE_ENV === 'production'
+      ? (langDomains[userLangForReset] || langDomains.en)
       : (process.env.FRONTEND_URL ? process.env.FRONTEND_URL.split(',')[0].trim().replace(/\/$/, '') : 'http://localhost:3000');
-      
+
     const resetLink = `${frontendUrl}/reset-password?token=${resetToken}`;
 
-    sendPasswordResetEmail(user.email, user.name, resetLink).catch(err => console.error('Non-fatal: Error sending password reset email:', err.message || err));
+    sendPasswordResetEmail(user.email, user.name, resetLink, userLangForReset).catch(err => console.error('Non-fatal: Error sending password reset email:', err.message || err));
 
     res.json({ message: 'If an account exists, a reset link has been sent.' });
   } catch (err) {

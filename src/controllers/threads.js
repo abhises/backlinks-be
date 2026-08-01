@@ -251,7 +251,8 @@ const updateThreadStatus = async (req, res) => {
       const otherWorkspace = isGiver ? updated.receiverWorkspace : updated.giverWorkspace;
       const otherOwner = otherWorkspace.teamMembers?.[0]?.user;
       if (otherOwner) {
-        await sendConnectionAcceptedEmail(otherOwner.email, otherOwner.name, selfWorkspace.domain);
+        const otherOwnerLanguage = otherOwner.language || otherWorkspace.language || 'en';
+        await sendConnectionAcceptedEmail(otherOwner.email, otherOwner.name, selfWorkspace.domain, otherOwnerLanguage);
       }
 
     } else if (newStatus === 'REJECTED') {

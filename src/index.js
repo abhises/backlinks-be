@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
+const helmet = require('helmet');
 
 const authRoutes = require('./routes/auth');
 const workspaceRoutes = require('./routes/workspaces');
@@ -11,6 +12,9 @@ const linkRoutes = require('./routes/links');
 const notificationRoutes = require('./routes/notifications');
 
 const app = express();
+
+// Use Helmet for standard security headers
+app.use(helmet());
 
 // Trust the reverse proxy (like Nginx) to get the real client IP from X-Forwarded-For headers
 app.set('trust proxy', 1);

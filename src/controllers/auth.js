@@ -63,8 +63,9 @@ const register = async (req, res) => {
 
     const language = getLanguageFromReq(req);
     const hashedPassword = await bcrypt.hash(password, 12);
+    const trialEndsAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
     const user = await prisma.user.create({
-      data: { name, email, hashedPassword, language },
+      data: { name, email, hashedPassword, language, trialEndsAt, subscriptionStatus: 'TRIALING' },
     });
 
     // Send welcome email asynchronously without blocking registration
@@ -166,12 +167,15 @@ const google = async (req, res) => {
     } else {
       const language = getLanguageFromReq(req);
       // Create a user without a password
+      const trialEndsAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
       user = await prisma.user.create({
         data: {
           name: name || email.split('@')[0],
           email,
           hashedPassword: null,
           language,
+          trialEndsAt,
+          subscriptionStatus: 'TRIALING',
         },
       });
 

@@ -22,6 +22,9 @@ const adminMiddleware = (req, res, next) => {
 // GET /api/admin/stats
 router.get('/stats', authMiddleware, adminMiddleware, adminController.getStats);
 
+// GET /api/admin/subscriptions
+router.get('/subscriptions', authMiddleware, adminMiddleware, adminController.getSubscriptions);
+
 // POST /api/admin/notifications
 router.post('/notifications', authMiddleware, adminMiddleware, sendNotificationValidator, validate, adminController.sendNotification);
 

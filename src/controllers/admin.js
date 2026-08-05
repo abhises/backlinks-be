@@ -1,4 +1,67 @@
 const prisma = require('../lib/prisma');
+const stripe = require('../lib/stripe');
+
+const getSubscriptions = async (req, res) => {
+  try {
+    const users = await prisma.user.findMany({
+      where: { role: { not: 'ADMIN' } },
+      orderBy: { createdAt: 'desc' },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        createdAt: true,
+        subscriptionStatus: true,
+        trialEndsAt: true,
+        stripeCustomerId: true,
+        stripeSubscriptionId: true,
+        teamMemberships: {
+          select: { workspace: { select: { domain: true, websiteName: true } } },
+        },
+      },
+    });
+
+    const subscriptions = await Promise.all(users.map(async (u) => {
+      let lastPayment = null;
+      if (u.stripeCustomerId) {
+        try {
+          const invoices = await stripe.invoices.list({ customer: u.stripeCustomerId, limit: 1 });
+          const inv = invoices.data[0];
+          if (inv) {
+            lastPayment = {
+              amount: inv.amount_paid / 100,
+              currency: inv.currency,
+              status: inv.status,
+              date: inv.status_transitions?.paid_at
+                ? new Date(inv.status_transitions.paid_at * 1000)
+                : new Date(inv.created * 1000),
+              hostedInvoiceUrl: inv.hosted_invoice_url,
+            };
+          }
+        } catch (err) {
+          console.error(`Failed to fetch Stripe invoice for user ${u.id}:`, err.message);
+        }
+      }
+      return {
+        id: u.id,
+        name: u.name,
+        email: u.email,
+        createdAt: u.createdAt,
+        subscriptionStatus: u.subscriptionStatus,
+        trialEndsAt: u.trialEndsAt,
+        stripeCustomerId: u.stripeCustomerId,
+        stripeSubscriptionId: u.stripeSubscriptionId,
+        workspace: u.teamMemberships[0]?.workspace || null,
+        lastPayment,
+      };
+    }));
+
+    res.json({ subscriptions });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+};
 
 const getStats = async (req, res) => {
   try {
@@ -137,6 +200,21 @@ const updateUser = async (req, res) => {
 const deleteUser = async (req, res) => {
   try {
     const userId = req.params.id;
+
+    // Cancel any active Stripe subscription first, so deleting the user
+    // doesn't leave them being billed with no account left to show for it.
+    const target = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { stripeSubscriptionId: true },
+    });
+    if (target?.stripeSubscriptionId) {
+      try {
+        await stripe.subscriptions.cancel(target.stripeSubscriptionId);
+      } catch (err) {
+        console.error(`Failed to cancel Stripe subscription for deleted user ${userId}:`, err.message);
+      }
+    }
+
     // Find the user's workspaces
     const teamMemberships = await prisma.teamMember.findMany({
       where: { userId },
@@ -256,6 +334,7 @@ const updateSettings = async (req, res) => {
 };
 
 module.exports = {
+  getSubscriptions,
   getStats,
   sendNotification,
   getNotifications,

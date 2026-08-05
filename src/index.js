@@ -10,6 +10,8 @@ const threadRoutes = require('./routes/threads');
 const messageRoutes = require('./routes/messages');
 const linkRoutes = require('./routes/links');
 const notificationRoutes = require('./routes/notifications');
+const billingRoutes = require('./routes/billing');
+const billingController = require('./controllers/billing');
 
 const app = express();
 
@@ -58,6 +60,10 @@ app.use(cors({
   credentials: true,
 }));
 
+// Stripe webhook needs the raw request body to verify the signature, so it
+// must be mounted before the global express.json() body parser below.
+app.post('/api/billing/webhook', express.raw({ type: 'application/json' }), billingController.webhook);
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
@@ -98,6 +104,7 @@ app.use('/api/threads', threadRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/links', linkRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/billing', billingRoutes);
 
 const adminRoutes = require('./routes/admin');
 app.use('/api/admin', adminRoutes);

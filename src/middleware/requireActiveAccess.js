@@ -1,9 +1,12 @@
 const prisma = require('../lib/prisma');
+const { isBetaMode } = require('../lib/platformMode');
 
 // Blocks core paid actions once a user's free trial has lapsed and they have
 // no active Stripe subscription. Must run after authMiddleware.
 const requireActiveAccess = async (req, res, next) => {
   try {
+    if (await isBetaMode()) return next();
+
     const user = await prisma.user.findUnique({
       where: { id: req.user.userId },
       select: { role: true, subscriptionStatus: true, trialEndsAt: true },

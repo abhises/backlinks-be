@@ -151,5 +151,8 @@ model SystemSettings {
   rejectLimit          Int      @default(5)
   answerTimeoutDays    Int      @default(7)
   placementTimeoutDays Int      @default(30)
+  // BETA: no payment/trial gating, full access for everyone. PAID: normal
+  // trial + Stripe subscription gating applies.
+  platformMode         String   @default("BETA") // BETA | PAID
   updatedAt            DateTime @updatedAt
 }

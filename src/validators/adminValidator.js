@@ -22,7 +22,8 @@ const updateSettingsValidator = [
   body('matchAmount').optional().isInt({ min: 1 }).withMessage('Must be a positive integer'),
   body('rejectLimit').optional().isInt({ min: 1 }),
   body('answerTimeoutDays').optional().isInt({ min: 1 }),
-  body('placementTimeoutDays').optional().isInt({ min: 1 })
+  body('placementTimeoutDays').optional().isInt({ min: 1 }),
+  body('platformMode').optional().isIn(['BETA', 'PAID'])
 ];
 
 module.exports = {

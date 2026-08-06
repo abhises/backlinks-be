@@ -2,14 +2,17 @@ const prisma = require('../lib/prisma');
 const cron = require('node-cron');
 const wsManager = require('../lib/ws');
 const { sendNewMatchEmail } = require('../lib/email');
+const { isBetaMode } = require('../lib/platformMode');
 
 const runWeeklyMatching = async () => {
   console.log(`[${new Date().toISOString()}] Running automated connection matching algorithm...`);
   try {
     const now = new Date();
-    // Fetch workspaces that belong ONLY to non-admin users, whose owner has
-    // active access (subscribed or still within their free trial) - expired
-    // trial/subscription owners shouldn't receive new connection requests.
+    const betaMode = await isBetaMode();
+    // Fetch workspaces that belong ONLY to non-admin users. In paid mode,
+    // the owner also needs active access (subscribed or still within their
+    // free trial) - expired trial/subscription owners shouldn't receive new
+    // connection requests. In beta mode there's no payment gating at all.
     const workspaces = await prisma.workspace.findMany({
       where: {
         verificationStatus: { not: 'FLAGGED' },
@@ -18,10 +21,12 @@ const runWeeklyMatching = async () => {
             role: 'OWNER',
             user: {
               role: { not: 'ADMIN' },
-              OR: [
-                { subscriptionStatus: 'ACTIVE' },
-                { subscriptionStatus: 'TRIALING', trialEndsAt: { gt: now } },
-              ],
+              ...(betaMode ? {} : {
+                OR: [
+                  { subscriptionStatus: 'ACTIVE' },
+                  { subscriptionStatus: 'TRIALING', trialEndsAt: { gt: now } },
+                ],
+              }),
             }
           }
         }

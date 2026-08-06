@@ -1,6 +1,7 @@
 const prisma = require('../lib/prisma');
 const wsManager = require('../lib/ws');
 const { sendConnectionAcceptedEmail } = require('../lib/email');
+const { isBetaMode } = require('../lib/platformMode');
 
 // Helper: get user's workspace
 async function getUserWorkspace(userId) {
@@ -212,19 +213,21 @@ const updateThreadStatus = async (req, res) => {
     } else if (status === 'ACCEPTED') {
       // Rejecting stays allowed with a lapsed trial/subscription (it's the
       // way out of a request they can't act on) but accepting is a paid action.
-      const accepter = await prisma.user.findUnique({
-        where: { id: req.user.userId },
-        select: { role: true, subscriptionStatus: true, trialEndsAt: true },
-      });
-      if (accepter && accepter.role !== 'ADMIN') {
-        const now = new Date();
-        const isTrialActive = accepter.subscriptionStatus === 'TRIALING' && accepter.trialEndsAt && accepter.trialEndsAt > now;
-        const hasAccess = accepter.subscriptionStatus === 'ACTIVE' || isTrialActive;
-        if (!hasAccess) {
-          return res.status(402).json({
-            error: 'Your free trial has ended. Subscribe to continue.',
-            code: 'SUBSCRIPTION_REQUIRED',
-          });
+      if (!(await isBetaMode())) {
+        const accepter = await prisma.user.findUnique({
+          where: { id: req.user.userId },
+          select: { role: true, subscriptionStatus: true, trialEndsAt: true },
+        });
+        if (accepter && accepter.role !== 'ADMIN') {
+          const now = new Date();
+          const isTrialActive = accepter.subscriptionStatus === 'TRIALING' && accepter.trialEndsAt && accepter.trialEndsAt > now;
+          const hasAccess = accepter.subscriptionStatus === 'ACTIVE' || isTrialActive;
+          if (!hasAccess) {
+            return res.status(402).json({
+              error: 'Your free trial has ended. Subscribe to continue.',
+              code: 'SUBSCRIPTION_REQUIRED',
+            });
+          }
         }
       }
 

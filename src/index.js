@@ -98,6 +98,18 @@ app.get('/api/health', (req, res) => {
   res.redirect('/health');
 });
 
+// Public - needed on pre-auth pages (e.g. registration) that must know the
+// mode before a session exists.
+app.get('/api/platform-mode', async (req, res) => {
+  try {
+    const { isBetaMode } = require('./lib/platformMode');
+    res.json({ platformMode: (await isBetaMode()) ? 'BETA' : 'PAID' });
+  } catch (err) {
+    console.error('Error in /api/platform-mode:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/workspaces', workspaceRoutes);

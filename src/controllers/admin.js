@@ -314,12 +314,12 @@ const getSettings = async (req, res) => {
 };
 
 const updateSettings = async (req, res) => {
-  const { cronExpression, matchAmount, rejectLimit, answerTimeoutDays, placementTimeoutDays } = req.body;
+  const { cronExpression, matchAmount, rejectLimit, answerTimeoutDays, placementTimeoutDays, platformMode } = req.body;
   try {
     const settings = await prisma.systemSettings.upsert({
       where: { id: 'singleton' },
-      update: { cronExpression, matchAmount, rejectLimit, answerTimeoutDays, placementTimeoutDays },
-      create: { id: 'singleton', cronExpression, matchAmount, rejectLimit, answerTimeoutDays, placementTimeoutDays },
+      update: { cronExpression, matchAmount, rejectLimit, answerTimeoutDays, placementTimeoutDays, platformMode },
+      create: { id: 'singleton', cronExpression, matchAmount, rejectLimit, answerTimeoutDays, placementTimeoutDays, platformMode },
     });
 
     // Also re-initialize the cron job with the new expression

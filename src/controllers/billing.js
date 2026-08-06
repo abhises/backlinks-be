@@ -2,6 +2,7 @@ const stripe = require('../lib/stripe');
 const prisma = require('../lib/prisma');
 const wsManager = require('../lib/ws');
 const { sendSubscriptionActiveEmail } = require('../lib/email');
+const { isBetaMode } = require('../lib/platformMode');
 
 const getUserWorkspace = async (userId) => {
   const member = await prisma.teamMember.findFirst({ where: { userId }, select: { workspaceId: true } });
@@ -39,9 +40,10 @@ const getStatus = async (req, res) => {
     });
     if (!user) return res.status(404).json({ error: 'User not found' });
 
+    const betaMode = await isBetaMode();
     const now = new Date();
     const isTrialActive = user.subscriptionStatus === 'TRIALING' && user.trialEndsAt && user.trialEndsAt > now;
-    const hasAccess = user.subscriptionStatus === 'ACTIVE' || isTrialActive;
+    const hasAccess = betaMode || user.subscriptionStatus === 'ACTIVE' || isTrialActive;
     const trialDaysLeft = isTrialActive
       ? Math.max(0, Math.ceil((user.trialEndsAt.getTime() - now.getTime()) / (24 * 60 * 60 * 1000)))
       : 0;
@@ -89,6 +91,7 @@ const getStatus = async (req, res) => {
       daysUntilRenewal,
       cancelAtPeriodEnd,
       stripeCustomerId: user.stripeCustomerId,
+      platformMode: betaMode ? 'BETA' : 'PAID',
     });
   } catch (err) {
     console.error('Error in getStatus:', err);

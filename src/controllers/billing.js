@@ -8,9 +8,19 @@ const getUserWorkspace = async (userId) => {
 };
 
 const PRICE_ID = process.env.STRIPE_PRICE_ID;
-const FRONTEND_URL = process.env.FRONTEND_URL
+const DEFAULT_FRONTEND_URL = process.env.FRONTEND_URL
   ? process.env.FRONTEND_URL.split(',')[0].trim().replace(/\/$/, '')
   : 'http://localhost:3000';
+const ALLOWED_FRONTEND_URLS = process.env.FRONTEND_URL
+  ? process.env.FRONTEND_URL.split(',').map(url => url.trim().replace(/\/$/, ''))
+  : [DEFAULT_FRONTEND_URL];
+
+// Stripe must redirect back to the same origin the user checked out from,
+// or their session cookie won't be visible on the domain they land on.
+const getReturnUrl = (req) => {
+  const origin = req.headers.origin ? req.headers.origin.replace(/\/$/, '') : null;
+  return origin && ALLOWED_FRONTEND_URLS.includes(origin) ? origin : DEFAULT_FRONTEND_URL;
+};
 
 // Stripe subscription statuses -> our simplified enum
 const mapStripeStatus = (stripeStatus) => {
@@ -104,8 +114,8 @@ const createCheckoutSession = async (req, res) => {
       subscription_data: {
         metadata: { userId: user.id },
       },
-      success_url: `${FRONTEND_URL}/billing?checkout=success`,
-      cancel_url: `${FRONTEND_URL}/billing?checkout=cancelled`,
+      success_url: `${getReturnUrl(req)}/billing?checkout=success`,
+      cancel_url: `${getReturnUrl(req)}/billing?checkout=cancelled`,
     });
 
     res.json({ url: session.url });
@@ -125,7 +135,7 @@ const createPortalSession = async (req, res) => {
 
     const portalSession = await stripe.billingPortal.sessions.create({
       customer: user.stripeCustomerId,
-      return_url: `${FRONTEND_URL}/settings#billing`,
+      return_url: `${getReturnUrl(req)}/settings#billing`,
     });
 
     res.json({ url: portalSession.url });

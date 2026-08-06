@@ -53,4 +53,7 @@ router.put('/settings', authMiddleware, adminMiddleware, updateSettingsValidator
 // GET /api/admin/tickets
 router.get('/tickets', authMiddleware, adminMiddleware, adminController.getTickets);
 
+// PUT /api/admin/tickets/:id/resolve
+router.put('/tickets/:id/resolve', authMiddleware, adminMiddleware, adminController.resolveTicket);
+
 module.exports = router;

@@ -1,5 +1,6 @@
 const prisma = require('../lib/prisma');
 const { sendNewTicketEmail } = require('../lib/email');
+const wsManager = require('../lib/ws');
 
 const createTicket = async (req, res) => {
   const { message } = req.body;
@@ -26,6 +27,8 @@ const createTicket = async (req, res) => {
       sendNewTicketEmail(admin.email, admin.name, user.name, user.email, ticket.message, admin.language)
         .catch(err => console.error('Non-fatal: Error sending new ticket email:', err.message || err));
     });
+
+    wsManager.notifyAdmins({ ticketId: ticket.id, submitterName: user.name, createdAt: ticket.createdAt });
 
     res.json({ ticket });
   } catch (err) {

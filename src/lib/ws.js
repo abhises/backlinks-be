@@ -56,6 +56,14 @@ class SocketManager {
           socket.leave(`workspace:${workspaceId}`);
         }
       });
+
+      socket.on('joinAdmin', () => {
+        socket.join('admins');
+      });
+
+      socket.on('leaveAdmin', () => {
+        socket.leave('admins');
+      });
     });
   }
 
@@ -79,6 +87,15 @@ class SocketManager {
       });
     } catch (err) {
       console.error('Failed to persist notification:', err);
+    }
+  }
+
+  // Real-time signal only (no full ticket text - the "admins" room isn't
+  // auth-gated at the socket layer, same as the existing workspace rooms).
+  // Admins fetch the actual ticket content via the authenticated REST endpoint.
+  notifyAdmins(payload) {
+    if (this.io) {
+      this.io.to('admins').emit('new_ticket', payload);
     }
   }
 

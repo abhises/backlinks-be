@@ -346,6 +346,20 @@ const getTickets = async (req, res) => {
   }
 };
 
+const resolveTicket = async (req, res) => {
+  try {
+    const ticket = await prisma.supportTicket.update({
+      where: { id: req.params.id },
+      data: { status: 'RESOLVED' },
+    });
+    res.json({ ticket });
+  } catch (err) {
+    if (err.code === 'P2025') return res.status(404).json({ error: 'Ticket not found' });
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+};
+
 module.exports = {
   getSubscriptions,
   getStats,
@@ -361,4 +375,5 @@ module.exports = {
   getSettings,
   updateSettings,
   getTickets,
+  resolveTicket,
 };

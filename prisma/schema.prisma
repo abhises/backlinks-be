@@ -21,6 +21,10 @@ model User {
   stripeCustomerId     String?   @unique
   stripeSubscriptionId String?   @unique
   subscriptionStatus   String    @default("TRIALING") // TRIALING | ACTIVE | PAST_DUE | CANCELED | EXPIRED
+  // Trial days still remaining at the moment they subscribed, honored as extra
+  // days added to the first billing period's displayed countdown. Stripe's
+  // actual charge/renewal cadence is untouched — this is display-only.
+  subscriptionBonusDays Int      @default(0)
 
   teamMemberships TeamMember[]
   sentMessages    ChatMessage[]

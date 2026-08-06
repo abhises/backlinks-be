@@ -34,7 +34,7 @@ const getStatus = async (req, res) => {
   try {
     const user = await prisma.user.findUnique({
       where: { id: req.user.userId },
-      select: { subscriptionStatus: true, trialEndsAt: true, stripeSubscriptionId: true },
+      select: { subscriptionStatus: true, trialEndsAt: true, stripeSubscriptionId: true, subscriptionBonusDays: true },
     });
     if (!user) return res.status(404).json({ error: 'User not found' });
 
@@ -54,9 +54,20 @@ const getStatus = async (req, res) => {
         const subscription = await stripe.subscriptions.retrieve(user.stripeSubscriptionId);
         const periodEndItem = subscription.items?.data?.[0];
         const periodEnd = subscription.current_period_end || periodEndItem?.current_period_end;
+        const periodStart = subscription.current_period_start || periodEndItem?.current_period_start;
         if (periodEnd) {
           renewalDate = new Date(periodEnd * 1000);
           daysUntilRenewal = Math.max(0, Math.ceil((renewalDate.getTime() - now.getTime()) / (24 * 60 * 60 * 1000)));
+
+          // Any leftover trial days at subscribe time are honored as bonus days
+          // on top of the first billing period only — Stripe's own charge/renewal
+          // dates are untouched, this only affects what we display.
+          const isFirstPeriod = subscription.start_date && periodStart
+            && Math.abs(periodStart - subscription.start_date) < 60;
+          if (isFirstPeriod && user.subscriptionBonusDays) {
+            renewalDate = new Date(renewalDate.getTime() + user.subscriptionBonusDays * 24 * 60 * 60 * 1000);
+            daysUntilRenewal += user.subscriptionBonusDays;
+          }
         }
         // Stripe uses cancel_at_period_end for normal billing-cycle cancellations,
         // but a separate cancel_at timestamp when cancelling during an active trial.
@@ -166,12 +177,22 @@ const webhook = async (req, res) => {
         if (userId && subscriptionId) {
           const subscription = await stripe.subscriptions.retrieve(subscriptionId);
           const newStatus = mapStripeStatus(subscription.status);
+
+          const existingUser = await prisma.user.findUnique({
+            where: { id: userId },
+            select: { trialEndsAt: true },
+          });
+          const trialDaysLeft = existingUser?.trialEndsAt && existingUser.trialEndsAt > new Date()
+            ? Math.ceil((existingUser.trialEndsAt.getTime() - Date.now()) / (24 * 60 * 60 * 1000))
+            : 0;
+
           await prisma.user.update({
             where: { id: userId },
             data: {
               stripeCustomerId: customerId,
               stripeSubscriptionId: subscriptionId,
               subscriptionStatus: newStatus,
+              subscriptionBonusDays: trialDaysLeft,
             },
           });
 

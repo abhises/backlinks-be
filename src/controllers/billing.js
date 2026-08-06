@@ -1,6 +1,7 @@
 const stripe = require('../lib/stripe');
 const prisma = require('../lib/prisma');
 const wsManager = require('../lib/ws');
+const { sendSubscriptionActiveEmail } = require('../lib/email');
 
 const getUserWorkspace = async (userId) => {
   const member = await prisma.teamMember.findFirst({ where: { userId }, select: { workspaceId: true } });
@@ -180,7 +181,7 @@ const webhook = async (req, res) => {
 
           const existingUser = await prisma.user.findUnique({
             where: { id: userId },
-            select: { trialEndsAt: true },
+            select: { trialEndsAt: true, email: true, name: true, language: true },
           });
           const trialDaysLeft = existingUser?.trialEndsAt && existingUser.trialEndsAt > new Date()
             ? Math.ceil((existingUser.trialEndsAt.getTime() - Date.now()) / (24 * 60 * 60 * 1000))
@@ -205,6 +206,10 @@ const webhook = async (req, res) => {
                 body: 'Your subscription is active. You now have full access to SERPsupport.',
                 link: '/billing',
               });
+            }
+            if (existingUser?.email) {
+              sendSubscriptionActiveEmail(existingUser.email, existingUser.name, existingUser.language)
+                .catch(err => console.error('Non-fatal: Error sending subscription active email:', err.message || err));
             }
           }
         }

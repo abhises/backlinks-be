@@ -180,6 +180,34 @@ const emailTranslations = {
       fallbackLabel: 'Of kopieer en plak deze link in je browser:',
     },
   },
+
+  // ── Subscription Active Email ──
+  subscriptionActive: {
+    en: {
+      subject: 'Your payment was successful — welcome to SERPsupport Pro! 🎉',
+      heading: 'Payment successful! 🎉',
+      hi: (name) => `Hi ${name},`,
+      body1: "Your payment went through and you're now subscribed to <strong>SERPsupport Pro</strong>.",
+      body2: 'You have full access to sending messages, creating connections, and placing links.',
+      cta: 'View Billing',
+    },
+    fi: {
+      subject: 'Maksusi onnistui — tervetuloa SERPsupport Prohon! 🎉',
+      heading: 'Maksu onnistui! 🎉',
+      hi: (name) => `Hei ${name},`,
+      body1: 'Maksusi meni läpi ja olet nyt tilannut <strong>SERPsupport Pro</strong> -tilauksen.',
+      body2: 'Sinulla on täysi pääsy viestien lähettämiseen, yhteyksien luomiseen ja linkkien sijoittamiseen.',
+      cta: 'Näytä laskutus',
+    },
+    nl: {
+      subject: 'Je betaling is gelukt — welkom bij SERPsupport Pro! 🎉',
+      heading: 'Betaling geslaagd! 🎉',
+      hi: (name) => `Hallo ${name},`,
+      body1: 'Je betaling is gelukt en je bent nu geabonneerd op <strong>SERPsupport Pro</strong>.',
+      body2: 'Je hebt nu volledige toegang tot het versturen van berichten, het aangaan van verbindingen en het plaatsen van links.',
+      cta: 'Bekijk facturering',
+    },
+  },
 };
 
 // ─── Email Functions ─────────────────────────────────────────────────────────
@@ -295,9 +323,35 @@ const sendPasswordResetEmail = async (email, name, resetLink, language = 'en') =
   }
 };
 
+const sendSubscriptionActiveEmail = async (email, name, language = 'en') => {
+  if (process.env.NODE_ENV !== 'production') return;
+  const lang = ['en', 'fi', 'nl'].includes(language) ? language : 'en';
+  const tr = emailTranslations.subscriptionActive[lang];
+  const billingUrl = `${getFrontendUrl(lang)}/billing`;
+
+  try {
+    const info = await transporter.sendMail({
+      from: `"SerpSupport" <${process.env.EMAIL_USER}>`,
+      to: email,
+      subject: tr.subject,
+      html: emailWrapper(`
+        ${h1(tr.heading)}
+        ${p(tr.hi(name))}
+        ${p(tr.body1)}
+        ${p(tr.body2)}
+        ${ctaButton(billingUrl, tr.cta)}
+      `),
+    });
+    console.log('Subscription active email sent: %s', info.messageId);
+  } catch (error) {
+    console.error('Error sending subscription active email:', error);
+  }
+};
+
 module.exports = {
   sendWelcomeEmail,
   sendNewMatchEmail,
   sendConnectionAcceptedEmail,
   sendPasswordResetEmail,
+  sendSubscriptionActiveEmail,
 };

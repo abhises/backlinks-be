@@ -54,6 +54,10 @@ const p = (text) =>
 const h1 = (text) =>
   `<h1 style="color: #00b899; font-size: 24px; margin-top: 0; text-align: center;">${text}</h1>`;
 
+// Escapes free-text user input before it's interpolated into an HTML email body
+const escapeHtml = (text) =>
+  String(text).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
 // ─── Translations ────────────────────────────────────────────────────────────
 
 const emailTranslations = {
@@ -208,6 +212,31 @@ const emailTranslations = {
       cta: 'Bekijk facturering',
     },
   },
+
+  // ── New Support Ticket Email (sent to admins) ──
+  newTicket: {
+    en: {
+      subject: 'New support ticket submitted',
+      heading: 'New support ticket 🎫',
+      hi: (name) => `Hi ${name},`,
+      body1: (submitterName, submitterEmail) => `<strong>${submitterName}</strong> (${submitterEmail}) just submitted a support ticket:`,
+      cta: 'View in Admin Dashboard',
+    },
+    fi: {
+      subject: 'Uusi tukipyyntö lähetetty',
+      heading: 'Uusi tukipyyntö 🎫',
+      hi: (name) => `Hei ${name},`,
+      body1: (submitterName, submitterEmail) => `<strong>${submitterName}</strong> (${submitterEmail}) lähetti juuri tukipyynnön:`,
+      cta: 'Näytä hallintapaneelissa',
+    },
+    nl: {
+      subject: 'Nieuw supportticket ingediend',
+      heading: 'Nieuw supportticket 🎫',
+      hi: (name) => `Hallo ${name},`,
+      body1: (submitterName, submitterEmail) => `<strong>${submitterName}</strong> (${submitterEmail}) heeft zojuist een supportticket ingediend:`,
+      cta: 'Bekijk in Adminpaneel',
+    },
+  },
 };
 
 // ─── Email Functions ─────────────────────────────────────────────────────────
@@ -348,10 +377,36 @@ const sendSubscriptionActiveEmail = async (email, name, language = 'en') => {
   }
 };
 
+const sendNewTicketEmail = async (adminEmail, adminName, submitterName, submitterEmail, message, language = 'en') => {
+  if (process.env.NODE_ENV !== 'production') return;
+  const lang = ['en', 'fi', 'nl'].includes(language) ? language : 'en';
+  const tr = emailTranslations.newTicket[lang];
+  const dashboardUrl = `${getFrontendUrl(lang)}/admin/tickets`;
+
+  try {
+    const info = await transporter.sendMail({
+      from: `"SerpSupport" <${process.env.EMAIL_USER}>`,
+      to: adminEmail,
+      subject: tr.subject,
+      html: emailWrapper(`
+        ${h1(tr.heading)}
+        ${p(tr.hi(adminName))}
+        ${p(tr.body1(escapeHtml(submitterName), escapeHtml(submitterEmail)))}
+        <blockquote style="margin: 16px 0; padding: 12px 16px; border-left: 3px solid #00b899; background: #f5f5f5; font-size: 15px; line-height: 1.5; white-space: pre-wrap;">${escapeHtml(message)}</blockquote>
+        ${ctaButton(dashboardUrl, tr.cta)}
+      `),
+    });
+    console.log('New ticket email sent: %s', info.messageId);
+  } catch (error) {
+    console.error('Error sending new ticket email:', error);
+  }
+};
+
 module.exports = {
   sendWelcomeEmail,
   sendNewMatchEmail,
   sendConnectionAcceptedEmail,
   sendPasswordResetEmail,
   sendSubscriptionActiveEmail,
+  sendNewTicketEmail,
 };

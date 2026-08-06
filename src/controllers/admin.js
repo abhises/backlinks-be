@@ -333,6 +333,19 @@ const updateSettings = async (req, res) => {
   }
 };
 
+const getTickets = async (req, res) => {
+  try {
+    const tickets = await prisma.supportTicket.findMany({
+      orderBy: { createdAt: 'desc' },
+      include: { user: { select: { name: true, email: true } } },
+    });
+    res.json({ tickets });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+};
+
 module.exports = {
   getSubscriptions,
   getStats,
@@ -347,4 +360,5 @@ module.exports = {
   triggerMatching,
   getSettings,
   updateSettings,
+  getTickets,
 };

@@ -50,4 +50,7 @@ router.get('/settings', authMiddleware, adminMiddleware, adminController.getSett
 // PUT /api/admin/settings
 router.put('/settings', authMiddleware, adminMiddleware, updateSettingsValidator, validate, adminController.updateSettings);
 
+// GET /api/admin/tickets
+router.get('/tickets', authMiddleware, adminMiddleware, adminController.getTickets);
+
 module.exports = router;

@@ -28,6 +28,7 @@ model User {
 
   teamMemberships TeamMember[]
   sentMessages    ChatMessage[]
+  supportTickets  SupportTicket[]
 }
 
 model Workspace {
@@ -131,6 +132,16 @@ model Notification {
   payload     String?     @db.Text  
 
   workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+}
+
+model SupportTicket {
+  id        String   @id @default(uuid())
+  userId    String
+  message   String   @db.Text
+  status    String   @default("OPEN") // OPEN | RESOLVED
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model SystemSettings {

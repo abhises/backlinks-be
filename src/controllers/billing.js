@@ -157,6 +157,35 @@ const createPortalSession = async (req, res) => {
   }
 };
 
+const getInvoices = async (req, res) => {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: req.user.userId },
+      select: { stripeCustomerId: true },
+    });
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    if (!user.stripeCustomerId) return res.json({ invoices: [] });
+
+    const result = await stripe.invoices.list({ customer: user.stripeCustomerId, limit: 12 });
+    const invoices = result.data.map((inv) => ({
+      id: inv.id,
+      number: inv.number,
+      status: inv.status, // draft | open | paid | uncollectible | void
+      amountPaid: inv.amount_paid,
+      amountDue: inv.amount_due,
+      currency: inv.currency,
+      created: inv.created * 1000,
+      hostedInvoiceUrl: inv.hosted_invoice_url,
+      invoicePdf: inv.invoice_pdf,
+    }));
+
+    res.json({ invoices });
+  } catch (err) {
+    console.error('Error in getInvoices:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+};
+
 const webhook = async (req, res) => {
   const signature = req.headers['stripe-signature'];
   let event;
@@ -281,4 +310,4 @@ const webhook = async (req, res) => {
   }
 };
 
-module.exports = { getStatus, createCheckoutSession, createPortalSession, webhook };
+module.exports = { getStatus, createCheckoutSession, createPortalSession, getInvoices, webhook };

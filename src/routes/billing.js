@@ -5,6 +5,7 @@ const billingController = require('../controllers/billing');
 const router = express.Router();
 
 router.get('/status', authMiddleware, billingController.getStatus);
+router.get('/invoices', authMiddleware, billingController.getInvoices);
 router.post('/create-checkout-session', authMiddleware, billingController.createCheckoutSession);
 router.post('/create-portal-session', authMiddleware, billingController.createPortalSession);
 

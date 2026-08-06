@@ -35,7 +35,7 @@ const getStatus = async (req, res) => {
   try {
     const user = await prisma.user.findUnique({
       where: { id: req.user.userId },
-      select: { subscriptionStatus: true, trialEndsAt: true, stripeSubscriptionId: true, subscriptionBonusDays: true },
+      select: { subscriptionStatus: true, trialEndsAt: true, stripeSubscriptionId: true, stripeCustomerId: true, subscriptionBonusDays: true },
     });
     if (!user) return res.status(404).json({ error: 'User not found' });
 
@@ -88,6 +88,7 @@ const getStatus = async (req, res) => {
       renewalDate,
       daysUntilRenewal,
       cancelAtPeriodEnd,
+      stripeCustomerId: user.stripeCustomerId,
     });
   } catch (err) {
     console.error('Error in getStatus:', err);

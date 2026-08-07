@@ -32,7 +32,7 @@ const transporter = nodemailer.createTransport({
 const emailWrapper = (content) => `
   <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #333; background-color: #f9f9f9; border-radius: 8px;">
     <div style="text-align: center; margin-bottom: 20px;">
-      <img src="https://www.serpsupport.com/icon.png" alt="SerpSupport Logo" style="width: 80px; height: auto;" />
+      <img src="https://www.serpsupport.com/logo-email.png" alt="SerpSupport Logo" style="width: 80px; height: auto;" />
     </div>
     <div style="background-color: #ffffff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
       ${content}

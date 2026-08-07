@@ -1,5 +1,6 @@
 const prisma = require('../lib/prisma');
 const stripe = require('../lib/stripe');
+const { sendAdminBroadcastEmail } = require('../lib/email');
 
 const getSubscriptions = async (req, res) => {
   try {
@@ -103,6 +104,15 @@ const sendNotification = async (req, res) => {
       messageText: description, // for compatibility
       senderWorkspaceDomain: 'System Admin',
     });
+
+    // Email every client too, not just whoever's online for the WS broadcast.
+    // Fire-and-forget so one slow/failed send can't hold up the admin's response.
+    prisma.user.findMany({
+      where: { role: { not: 'ADMIN' } },
+      select: { email: true, name: true, language: true },
+    }).then((users) => Promise.allSettled(
+      users.map((u) => sendAdminBroadcastEmail(u.email, u.name, title, description, u.language))
+    )).catch((err) => console.error('Non-fatal: Error sending admin broadcast emails:', err.message || err));
 
     res.json({ success: true, message: 'Notification broadcasted successfully', notification });
   } catch (err) {

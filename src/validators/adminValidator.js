@@ -1,9 +1,8 @@
 const { body, param } = require('express-validator');
 
 const sendNotificationValidator = [
-  body('type').notEmpty().withMessage('Type is required').isString().trim(),
   body('title').notEmpty().withMessage('Title is required').isString().trim(),
-  body('body').notEmpty().withMessage('Body is required').isString().trim()
+  body('description').notEmpty().withMessage('Description is required').isString().trim()
 ];
 
 const updateUserValidator = [

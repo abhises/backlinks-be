@@ -213,6 +213,28 @@ const emailTranslations = {
     },
   },
 
+  // ── Admin Broadcast Email ──
+  adminBroadcast: {
+    en: {
+      subjectPrefix: '📢 ',
+      heading: 'New announcement from SerpSupport',
+      hi: (name) => `Hi ${name},`,
+      cta: 'Go to Dashboard',
+    },
+    fi: {
+      subjectPrefix: '📢 ',
+      heading: 'Uusi ilmoitus SerpSupportilta',
+      hi: (name) => `Hei ${name},`,
+      cta: 'Siirry kojelautaan',
+    },
+    nl: {
+      subjectPrefix: '📢 ',
+      heading: 'Nieuwe aankondiging van SerpSupport',
+      hi: (name) => `Hallo ${name},`,
+      cta: 'Ga naar Dashboard',
+    },
+  },
+
   // ── New Support Ticket Email (sent to admins) ──
   newTicket: {
     en: {
@@ -377,6 +399,33 @@ const sendSubscriptionActiveEmail = async (email, name, language = 'en') => {
   }
 };
 
+const sendAdminBroadcastEmail = async (email, name, title, description, language = 'en') => {
+  if (process.env.NODE_ENV !== 'production') return;
+  const lang = ['en', 'fi', 'nl'].includes(language) ? language : 'en';
+  const tr = emailTranslations.adminBroadcast[lang];
+  const dashboardUrl = getFrontendUrl(lang);
+  // Strip newlines so free-text admin input can't inject extra mail headers via the subject
+  const safeSubject = String(title).replace(/[\r\n]+/g, ' ');
+
+  try {
+    const info = await transporter.sendMail({
+      from: `"SerpSupport" <${process.env.EMAIL_USER}>`,
+      to: email,
+      subject: `${tr.subjectPrefix}${safeSubject}`,
+      html: emailWrapper(`
+        ${h1(tr.heading)}
+        ${p(tr.hi(name))}
+        <p style="font-size: 17px; font-weight: 700; margin-bottom: 4px;">${escapeHtml(title)}</p>
+        <p style="font-size: 15px; line-height: 1.6; color: #444; white-space: pre-wrap;">${escapeHtml(description)}</p>
+        ${ctaButton(dashboardUrl, tr.cta)}
+      `),
+    });
+    console.log('Admin broadcast email sent: %s', info.messageId);
+  } catch (error) {
+    console.error('Error sending admin broadcast email:', error);
+  }
+};
+
 const sendNewTicketEmail = async (adminEmail, adminName, submitterName, submitterEmail, message, language = 'en') => {
   if (process.env.NODE_ENV !== 'production') return;
   const lang = ['en', 'fi', 'nl'].includes(language) ? language : 'en';
@@ -408,5 +457,6 @@ module.exports = {
   sendConnectionAcceptedEmail,
   sendPasswordResetEmail,
   sendSubscriptionActiveEmail,
+  sendAdminBroadcastEmail,
   sendNewTicketEmail,
 };

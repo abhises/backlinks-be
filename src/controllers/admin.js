@@ -56,7 +56,9 @@ const getSubscriptions = async (req, res) => {
       };
     }));
 
-    res.json({ subscriptions });
+    const stripeMode = process.env.STRIPE_SECRET_KEY?.startsWith('sk_live_') ? 'live' : 'test';
+
+    res.json({ subscriptions, stripeMode });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Server error' });

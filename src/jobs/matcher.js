@@ -361,92 +361,96 @@ const matchNewWorkspace = async (newWorkspaceId) => {
 
     const emailedUsers = new Set();
     let createdCount = 0;
-    let poolExhaustedWarningSent = false;
-
-    // Fill the new workspace's full giving quota (they give to up to
-    // matchAmount receivers), mirroring runWeeklyMatching's per-workspace logic.
-    const neededGiving = Math.max(0, matchAmount - (activeGivingCounts[ws.id] || 0));
-    if (neededGiving > 0) {
-      const potentialReceivers = sameLangPool.filter(c =>
-        !excludedReceivers.has(c.id) && (activeReceivingCounts[c.id] || 0) < matchAmount
-      );
-      if (potentialReceivers.length === 0) {
+    let noMatchesNotified = false;
+    const notifyNoMatches = () => {
+      if (!noMatchesNotified) {
         wsManager.sendNotification(ws.id, { type: 'no_matches' });
-        poolExhaustedWarningSent = true;
+        noMatchesNotified = true;
+      }
+    };
+
+    // Fill giving and receiving one slot at a time, alternating, instead of
+    // batch-filling one direction to completion before touching the other.
+    // Batch-filling first would greedily claim every available candidate as
+    // a receiver, then the reciprocal exclusion below leaves nothing left
+    // for the receiving side to pick from - the new workspace would end up
+    // with only "Backlink Out" threads whenever the candidate pool is small.
+    // Interleaving guarantees both directions get a turn each round as long
+    // as the pool has any spare capacity on each side.
+    for (let round = 0; round < matchAmount; round++) {
+      if ((activeGivingCounts[ws.id] || 0) < matchAmount) {
+        const potentialReceivers = sameLangPool.filter(c =>
+          !excludedReceivers.has(c.id) && (activeReceivingCounts[c.id] || 0) < matchAmount
+        );
+        if (potentialReceivers.length === 0) {
+          notifyNoMatches();
+        } else {
+          const rec = potentialReceivers.sort((a, b) => {
+            const diff = (activeReceivingCounts[a.id] || 0) - (activeReceivingCounts[b.id] || 0);
+            return diff === 0 ? 0.5 - Math.random() : diff;
+          })[0];
+
+          const thread = await prisma.exchangeThread.create({
+            data: { giverWorkspaceId: ws.id, receiverWorkspaceId: rec.id, stage: 'NEW', status: 'PENDING' }
+          });
+          excludedReceivers.add(rec.id);
+          excludedGivers.add(rec.id);
+          activeGivingCounts[ws.id] = (activeGivingCounts[ws.id] || 0) + 1;
+          activeReceivingCounts[rec.id] = (activeReceivingCounts[rec.id] || 0) + 1;
+
+          wsManager.sendNotification(ws.id, { type: 'new_thread', threadId: thread.id, direction: 'give', otherDomain: rec.domain });
+          wsManager.sendNotification(rec.id, { type: 'new_thread', threadId: thread.id, direction: 'receive', otherDomain: ws.domain });
+
+          const recOwner = rec.teamMembers?.[0]?.user;
+          if (wsOwner && !emailedUsers.has(wsOwner.email)) {
+            await sendNewMatchEmail(wsOwner.email, wsOwner.name, true, rec.domain, wsOwner.language || wsLang);
+            emailedUsers.add(wsOwner.email);
+          }
+          if (recOwner && !emailedUsers.has(recOwner.email)) {
+            await sendNewMatchEmail(recOwner.email, recOwner.name, false, ws.domain, recOwner.language || rec.language || 'en');
+            emailedUsers.add(recOwner.email);
+          }
+          createdCount++;
+        }
       }
 
-      const receivers = potentialReceivers
-        .sort((a, b) => {
-          const diff = (activeReceivingCounts[a.id] || 0) - (activeReceivingCounts[b.id] || 0);
-          return diff === 0 ? 0.5 - Math.random() : diff;
-        })
-        .slice(0, neededGiving);
+      if ((activeReceivingCounts[ws.id] || 0) < matchAmount) {
+        const potentialGivers = sameLangPool.filter(c =>
+          !excludedGivers.has(c.id) && (activeGivingCounts[c.id] || 0) < matchAmount
+        );
+        if (potentialGivers.length === 0) {
+          notifyNoMatches();
+        } else {
+          const giv = potentialGivers.sort((a, b) => {
+            const diff = (activeGivingCounts[a.id] || 0) - (activeGivingCounts[b.id] || 0);
+            return diff === 0 ? 0.5 - Math.random() : diff;
+          })[0];
 
-      for (const rec of receivers) {
-        const thread = await prisma.exchangeThread.create({
-          data: { giverWorkspaceId: ws.id, receiverWorkspaceId: rec.id, stage: 'NEW', status: 'PENDING' }
-        });
-        excludedReceivers.add(rec.id);
-        excludedGivers.add(rec.id);
-        activeGivingCounts[ws.id] = (activeGivingCounts[ws.id] || 0) + 1;
-        activeReceivingCounts[rec.id] = (activeReceivingCounts[rec.id] || 0) + 1;
+          const thread = await prisma.exchangeThread.create({
+            data: { giverWorkspaceId: giv.id, receiverWorkspaceId: ws.id, stage: 'NEW', status: 'PENDING' }
+          });
+          excludedGivers.add(giv.id);
+          excludedReceivers.add(giv.id);
+          activeReceivingCounts[ws.id] = (activeReceivingCounts[ws.id] || 0) + 1;
+          activeGivingCounts[giv.id] = (activeGivingCounts[giv.id] || 0) + 1;
 
-        wsManager.sendNotification(ws.id, { type: 'new_thread', threadId: thread.id, direction: 'give', otherDomain: rec.domain });
-        wsManager.sendNotification(rec.id, { type: 'new_thread', threadId: thread.id, direction: 'receive', otherDomain: ws.domain });
+          wsManager.sendNotification(giv.id, { type: 'new_thread', threadId: thread.id, direction: 'give', otherDomain: ws.domain });
+          wsManager.sendNotification(ws.id, { type: 'new_thread', threadId: thread.id, direction: 'receive', otherDomain: giv.domain });
 
-        const recOwner = rec.teamMembers?.[0]?.user;
-        if (wsOwner && !emailedUsers.has(wsOwner.email)) {
-          await sendNewMatchEmail(wsOwner.email, wsOwner.name, true, rec.domain, wsOwner.language || wsLang);
-          emailedUsers.add(wsOwner.email);
+          const givOwner = giv.teamMembers?.[0]?.user;
+          if (givOwner && !emailedUsers.has(givOwner.email)) {
+            await sendNewMatchEmail(givOwner.email, givOwner.name, true, ws.domain, givOwner.language || giv.language || 'en');
+            emailedUsers.add(givOwner.email);
+          }
+          if (wsOwner && !emailedUsers.has(wsOwner.email)) {
+            await sendNewMatchEmail(wsOwner.email, wsOwner.name, false, giv.domain, wsOwner.language || wsLang);
+            emailedUsers.add(wsOwner.email);
+          }
+          createdCount++;
         }
-        if (recOwner && !emailedUsers.has(recOwner.email)) {
-          await sendNewMatchEmail(recOwner.email, recOwner.name, false, ws.domain, recOwner.language || rec.language || 'en');
-          emailedUsers.add(recOwner.email);
-        }
-        createdCount++;
-      }
-    }
-
-    // Fill the new workspace's full receiving quota (up to matchAmount givers send to them).
-    const neededReceiving = Math.max(0, matchAmount - (activeReceivingCounts[ws.id] || 0));
-    if (neededReceiving > 0) {
-      const potentialGivers = sameLangPool.filter(c =>
-        !excludedGivers.has(c.id) && (activeGivingCounts[c.id] || 0) < matchAmount
-      );
-      if (potentialGivers.length === 0 && !poolExhaustedWarningSent) {
-        wsManager.sendNotification(ws.id, { type: 'no_matches' });
       }
 
-      const givers = potentialGivers
-        .sort((a, b) => {
-          const diff = (activeGivingCounts[a.id] || 0) - (activeGivingCounts[b.id] || 0);
-          return diff === 0 ? 0.5 - Math.random() : diff;
-        })
-        .slice(0, neededReceiving);
-
-      for (const giv of givers) {
-        const thread = await prisma.exchangeThread.create({
-          data: { giverWorkspaceId: giv.id, receiverWorkspaceId: ws.id, stage: 'NEW', status: 'PENDING' }
-        });
-        excludedGivers.add(giv.id);
-        excludedReceivers.add(giv.id);
-        activeReceivingCounts[ws.id] = (activeReceivingCounts[ws.id] || 0) + 1;
-        activeGivingCounts[giv.id] = (activeGivingCounts[giv.id] || 0) + 1;
-
-        wsManager.sendNotification(giv.id, { type: 'new_thread', threadId: thread.id, direction: 'give', otherDomain: ws.domain });
-        wsManager.sendNotification(ws.id, { type: 'new_thread', threadId: thread.id, direction: 'receive', otherDomain: giv.domain });
-
-        const givOwner = giv.teamMembers?.[0]?.user;
-        if (givOwner && !emailedUsers.has(givOwner.email)) {
-          await sendNewMatchEmail(givOwner.email, givOwner.name, true, ws.domain, givOwner.language || giv.language || 'en');
-          emailedUsers.add(givOwner.email);
-        }
-        if (wsOwner && !emailedUsers.has(wsOwner.email)) {
-          await sendNewMatchEmail(wsOwner.email, wsOwner.name, false, giv.domain, wsOwner.language || wsLang);
-          emailedUsers.add(wsOwner.email);
-        }
-        createdCount++;
-      }
+      if ((activeGivingCounts[ws.id] || 0) >= matchAmount && (activeReceivingCounts[ws.id] || 0) >= matchAmount) break;
     }
 
     console.log(`[${new Date().toISOString()}] Immediate first-match created ${createdCount} connection(s) for workspace ${newWorkspaceId}.`);

@@ -1,5 +1,7 @@
 const prisma = require('../lib/prisma');
 const { verifyWorkspaceLanguage } = require('../lib/verifier');
+const socketManager = require('../lib/ws');
+const { matchNewWorkspace } = require('../jobs/matcher');
 
 const createWorkspace = async (req, res) => {
   const { domain, websiteName, description, niche, country, language, monthlyTraffic } = req.body;
@@ -40,6 +42,17 @@ const createWorkspace = async (req, res) => {
       },
       include: { teamMembers: true },
     });
+
+    // Persist + push a one-time welcome notification now that the workspace exists
+    // (registration alone has no workspace yet, so this is the earliest point one can attach to).
+    socketManager.sendNotification(workspace.id, { type: 'signup_welcome' })
+      .catch(e => console.error('Failed to send welcome notification:', e));
+
+    // Give the new workspace its first connection request right away instead
+    // of making them wait for the next scheduled matching run. Later
+    // connections (up to matchAmount) still come from that regular schedule.
+    matchNewWorkspace(workspace.id)
+      .catch(e => console.error('Immediate first-match error:', e));
 
     // Asynchronously audit site language and hreflang tags in background
     verifyWorkspaceLanguage(cleanDomain, wsLanguage).then(async (audit) => {

@@ -372,6 +372,19 @@ const resolveTicket = async (req, res) => {
   }
 };
 
+const getAllFeedback = async (req, res) => {
+  try {
+    const feedback = await prisma.feedback.findMany({
+      orderBy: { createdAt: 'desc' },
+      include: { user: { select: { name: true, email: true } } },
+    });
+    res.json({ feedback });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+};
+
 module.exports = {
   getSubscriptions,
   getStats,
@@ -388,4 +401,5 @@ module.exports = {
   updateSettings,
   getTickets,
   resolveTicket,
+  getAllFeedback,
 };

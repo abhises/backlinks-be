@@ -13,6 +13,7 @@ const notificationRoutes = require('./routes/notifications');
 const billingRoutes = require('./routes/billing');
 const billingController = require('./controllers/billing');
 const ticketRoutes = require('./routes/tickets');
+const feedbackRoutes = require('./routes/feedback');
 
 const app = express();
 
@@ -119,6 +120,7 @@ app.use('/api/links', linkRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/billing', billingRoutes);
 app.use('/api/tickets', ticketRoutes);
+app.use('/api/feedback', feedbackRoutes);
 
 const adminRoutes = require('./routes/admin');
 app.use('/api/admin', adminRoutes);

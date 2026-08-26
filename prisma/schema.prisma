@@ -29,6 +29,7 @@ model User {
   teamMemberships TeamMember[]
   sentMessages    ChatMessage[]
   supportTickets  SupportTicket[]
+  feedbacks       Feedback[]
 }
 
 model Workspace {
@@ -155,4 +156,16 @@ model SystemSettings {
   // trial + Stripe subscription gating applies.
   platformMode         String   @default("BETA") // BETA | PAID
   updatedAt            DateTime @updatedAt
+}
+
+model Feedback {
+  id        String   @id @default(uuid())
+  userId    String
+  topic     String
+  message   String   @db.Text
+  rating    Int
+  recommend String?
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

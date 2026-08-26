@@ -99,6 +99,12 @@ class SocketManager {
     }
   }
 
+  notifyAdminsFeedback(payload) {
+    if (this.io) {
+      this.io.to('admins').emit('new_feedback', payload);
+    }
+  }
+
   async broadcastGlobalNotification(payload) {
     if (this.io) {
       this.io.emit('notification', payload);

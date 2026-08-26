@@ -56,4 +56,7 @@ router.get('/tickets', authMiddleware, adminMiddleware, adminController.getTicke
 // PUT /api/admin/tickets/:id/resolve
 router.put('/tickets/:id/resolve', authMiddleware, adminMiddleware, adminController.resolveTicket);
 
+// GET /api/admin/feedback
+router.get('/feedback', authMiddleware, adminMiddleware, adminController.getAllFeedback);
+
 module.exports = router;

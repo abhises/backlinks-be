@@ -259,6 +259,31 @@ const emailTranslations = {
       cta: 'Bekijk in Adminpaneel',
     },
   },
+
+  // ── New Feedback Email (sent to admins) ──
+  newFeedback: {
+    en: {
+      subject: 'New user feedback submitted',
+      heading: 'New feedback 💬',
+      hi: (name) => `Hi ${name},`,
+      body1: (submitterName, submitterEmail, topic) => `<strong>${submitterName}</strong> (${submitterEmail}) just submitted new feedback (Topic: ${topic}):`,
+      cta: 'View Feedback in Admin',
+    },
+    fi: {
+      subject: 'Uusi käyttäjäpalaute lähetetty',
+      heading: 'Uusi palaute 💬',
+      hi: (name) => `Hei ${name},`,
+      body1: (submitterName, submitterEmail, topic) => `<strong>${submitterName}</strong> (${submitterEmail}) lähetti juuri uuden palautteen (Aihe: ${topic}):`,
+      cta: 'Näytä palaute hallintapaneelissa',
+    },
+    nl: {
+      subject: 'Nieuwe gebruikersfeedback ingediend',
+      heading: 'Nieuwe feedback 💬',
+      hi: (name) => `Hallo ${name},`,
+      body1: (submitterName, submitterEmail, topic) => `<strong>${submitterName}</strong> (${submitterEmail}) heeft zojuist nieuwe feedback ingediend (Onderwerp: ${topic}):`,
+      cta: 'Bekijk feedback in Adminpaneel',
+    },
+  },
 };
 
 // ─── Email Functions ─────────────────────────────────────────────────────────
@@ -451,6 +476,31 @@ const sendNewTicketEmail = async (adminEmail, adminName, submitterName, submitte
   }
 };
 
+const sendNewFeedbackEmail = async (adminEmail, adminName, submitterName, submitterEmail, topic, message, language = 'en') => {
+  if (process.env.NODE_ENV !== 'production') return;
+  const lang = ['en', 'fi', 'nl'].includes(language) ? language : 'en';
+  const tr = emailTranslations.newFeedback[lang];
+  const dashboardUrl = `${getFrontendUrl(lang)}/admin/feedback`;
+
+  try {
+    const info = await transporter.sendMail({
+      from: `"SerpSupport" <${process.env.EMAIL_USER}>`,
+      to: adminEmail,
+      subject: tr.subject,
+      html: emailWrapper(`
+        ${h1(tr.heading)}
+        ${p(tr.hi(adminName))}
+        ${p(tr.body1(escapeHtml(submitterName), escapeHtml(submitterEmail), escapeHtml(topic)))}
+        <blockquote style="margin: 16px 0; padding: 12px 16px; border-left: 3px solid #00b899; background: #f5f5f5; font-size: 15px; line-height: 1.5; white-space: pre-wrap;">${escapeHtml(message)}</blockquote>
+        ${ctaButton(dashboardUrl, tr.cta)}
+      `),
+    });
+    console.log('New feedback email sent: %s', info.messageId);
+  } catch (error) {
+    console.error('Error sending new feedback email:', error);
+  }
+};
+
 module.exports = {
   sendWelcomeEmail,
   sendNewMatchEmail,
@@ -459,4 +509,5 @@ module.exports = {
   sendSubscriptionActiveEmail,
   sendAdminBroadcastEmail,
   sendNewTicketEmail,
+  sendNewFeedbackEmail,
 };

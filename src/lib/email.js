@@ -300,7 +300,7 @@ const sendWelcomeEmail = async (email, name, language = 'en') => {
       to: email,
       subject: tr.subject,
       html: emailWrapper(`
-        ${h1(tr.heading(name))}
+        ${h1(tr.heading(name && escapeHtml(name)))}
         ${p(tr.body1)}
         ${p(tr.body2)}
         ${ctaButton(dashboardUrl, tr.cta)}
@@ -326,7 +326,7 @@ const sendNewMatchEmail = async (email, name, isGiver, otherDomain, language = '
       subject: tr.subject,
       html: emailWrapper(`
         ${h1(tr.heading)}
-        ${p(tr.hi(name))}
+        ${p(tr.hi(name && escapeHtml(name)))}
         ${p(tr.body1(roleText))}
         ${p(tr.body2)}
         ${ctaButton(dashboardUrl, tr.cta)}
@@ -351,7 +351,7 @@ const sendConnectionAcceptedEmail = async (email, name, acceptedDomain, language
       subject: tr.subject,
       html: emailWrapper(`
         ${h1(tr.heading)}
-        ${p(tr.hi(name))}
+        ${p(tr.hi(name && escapeHtml(name)))}
         ${p(tr.body1(acceptedDomain))}
         ${p(tr.body2)}
         ${ctaButton(inboxUrl, tr.cta)}
@@ -381,7 +381,7 @@ const sendPasswordResetEmail = async (email, name, resetLink, language = 'en') =
       subject: tr.subject,
       html: emailWrapper(`
         ${h1(tr.heading)}
-        ${p(tr.hi(name))}
+        ${p(tr.hi(name && escapeHtml(name)))}
         ${p(tr.body1)}
         ${p(tr.body2)}
         <div style="text-align: center; margin-top: 30px; margin-bottom: 20px;">
@@ -412,7 +412,7 @@ const sendSubscriptionActiveEmail = async (email, name, language = 'en') => {
       subject: tr.subject,
       html: emailWrapper(`
         ${h1(tr.heading)}
-        ${p(tr.hi(name))}
+        ${p(tr.hi(name && escapeHtml(name)))}
         ${p(tr.body1)}
         ${p(tr.body2)}
         ${ctaButton(billingUrl, tr.cta)}
@@ -439,7 +439,7 @@ const sendAdminBroadcastEmail = async (email, name, title, description, language
       subject: `${tr.subjectPrefix}${safeSubject}`,
       html: emailWrapper(`
         ${h1(tr.heading)}
-        ${p(tr.hi(name))}
+        ${p(tr.hi(name && escapeHtml(name)))}
         <p style="font-size: 17px; font-weight: 700; margin-bottom: 4px;">${escapeHtml(title)}</p>
         <p style="font-size: 15px; line-height: 1.6; color: #444; white-space: pre-wrap;">${escapeHtml(description)}</p>
         ${ctaButton(dashboardUrl, tr.cta)}
@@ -464,7 +464,7 @@ const sendNewTicketEmail = async (adminEmail, adminName, submitterName, submitte
       subject: tr.subject,
       html: emailWrapper(`
         ${h1(tr.heading)}
-        ${p(tr.hi(adminName))}
+        ${p(tr.hi(adminName && escapeHtml(adminName)))}
         ${p(tr.body1(escapeHtml(submitterName), escapeHtml(submitterEmail)))}
         <blockquote style="margin: 16px 0; padding: 12px 16px; border-left: 3px solid #00b899; background: #f5f5f5; font-size: 15px; line-height: 1.5; white-space: pre-wrap;">${escapeHtml(message)}</blockquote>
         ${ctaButton(dashboardUrl, tr.cta)}
@@ -489,7 +489,7 @@ const sendNewFeedbackEmail = async (adminEmail, adminName, submitterName, submit
       subject: tr.subject,
       html: emailWrapper(`
         ${h1(tr.heading)}
-        ${p(tr.hi(adminName))}
+        ${p(tr.hi(adminName && escapeHtml(adminName)))}
         ${p(tr.body1(escapeHtml(submitterName), escapeHtml(submitterEmail), escapeHtml(topic)))}
         <blockquote style="margin: 16px 0; padding: 12px 16px; border-left: 3px solid #00b899; background: #f5f5f5; font-size: 15px; line-height: 1.5; white-space: pre-wrap;">${escapeHtml(message)}</blockquote>
         ${ctaButton(dashboardUrl, tr.cta)}

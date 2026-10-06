@@ -3,7 +3,7 @@ const { body } = require('express-validator');
 const registerValidator = [
   body('email').isEmail().withMessage('Valid email is required').normalizeEmail(),
   body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
-  body('name').optional().isString().trim().escape()
+  body('name').optional().isString().trim()
 ];
 
 const loginValidator = [

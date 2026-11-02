@@ -32,6 +32,41 @@ const mapStripeStatus = (stripeStatus) => {
   return 'TRIALING';
 };
 
+const isMissing = (err) => err && err.code === 'resource_missing';
+
+// A user's stored Stripe customer/subscription can belong to a different Stripe
+// account (e.g. after switching test -> live keys or changing accounts). When
+// Stripe says it doesn't exist, drop the stale link so the user can subscribe
+// fresh instead of every billing call failing.
+const resetStaleStripeLink = async (userId) => {
+  const user = await prisma.user.findUnique({ where: { id: userId }, select: { trialEndsAt: true } });
+  const trialActive = user?.trialEndsAt && user.trialEndsAt > new Date();
+  await prisma.user.update({
+    where: { id: userId },
+    data: {
+      stripeCustomerId: null,
+      stripeSubscriptionId: null,
+      subscriptionStatus: trialActive ? 'TRIALING' : 'EXPIRED',
+      subscriptionBonusDays: 0,
+    },
+  });
+  console.warn(`Reset stale Stripe link for user ${userId} (customer/subscription not found in current Stripe account)`);
+};
+
+// Returns the user's customer id if it exists in the current Stripe account,
+// otherwise resets the stale link and returns null.
+const verifyCustomer = async (user) => {
+  if (!user.stripeCustomerId) return null;
+  try {
+    const customer = await stripe.customers.retrieve(user.stripeCustomerId);
+    if (!customer.deleted) return customer.id;
+  } catch (err) {
+    if (!isMissing(err)) throw err;
+  }
+  await resetStaleStripeLink(user.id);
+  return null;
+};
+
 const getStatus = async (req, res) => {
   try {
     const user = await prisma.user.findUnique({
@@ -76,6 +111,10 @@ const getStatus = async (req, res) => {
         // but a separate cancel_at timestamp when cancelling during an active trial.
         cancelAtPeriodEnd = !!subscription.cancel_at_period_end || !!subscription.cancel_at;
       } catch (err) {
+        if (isMissing(err)) {
+          await resetStaleStripeLink(req.user.userId);
+          return getStatus(req, res);
+        }
         console.error('Failed to retrieve Stripe subscription for renewal info:', err.message);
       }
     }
@@ -101,8 +140,12 @@ const getStatus = async (req, res) => {
 
 const createCheckoutSession = async (req, res) => {
   try {
-    const user = await prisma.user.findUnique({ where: { id: req.user.userId } });
+    let user = await prisma.user.findUnique({ where: { id: req.user.userId } });
     if (!user) return res.status(404).json({ error: 'User not found' });
+
+    if (user.stripeCustomerId && !(await verifyCustomer(user))) {
+      user = await prisma.user.findUnique({ where: { id: user.id } });
+    }
 
     if (user.subscriptionStatus === 'ACTIVE' && user.stripeSubscriptionId) {
       return res.status(400).json({ error: 'You already have an active subscription' });
@@ -145,7 +188,7 @@ const createPortalSession = async (req, res) => {
   try {
     const user = await prisma.user.findUnique({ where: { id: req.user.userId } });
     if (!user) return res.status(404).json({ error: 'User not found' });
-    if (!user.stripeCustomerId) {
+    if (!user.stripeCustomerId || !(await verifyCustomer(user))) {
       return res.status(400).json({ error: 'No billing account found. Subscribe first.' });
     }
 
@@ -185,6 +228,10 @@ const getInvoices = async (req, res) => {
 
     res.json({ invoices });
   } catch (err) {
+    if (isMissing(err)) {
+      await resetStaleStripeLink(req.user.userId);
+      return res.json({ invoices: [] });
+    }
     console.error('Error in getInvoices:', err);
     res.status(500).json({ error: 'Server error' });
   }

@@ -57,7 +57,7 @@ const getSubscriptions = async (req, res) => {
       };
     }));
 
-    const stripeMode = process.env.STRIPE_SECRET_KEY?.startsWith('sk_live_') ? 'live' : 'test';
+    const stripeMode = /^(sk|rk)_live_/.test(process.env.STRIPE_SECRET_KEY || '') ? 'live' : 'test';
 
     res.json({ subscriptions, stripeMode });
   } catch (err) {

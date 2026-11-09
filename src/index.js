@@ -66,6 +66,10 @@ app.use(cors({
 // must be mounted before the global express.json() body parser below.
 app.post('/api/billing/webhook', express.raw({ type: 'application/json' }), billingController.webhook);
 
+// Blog admin: post bodies and base64 image uploads are larger than the default 100kb.
+// Parsed here first; the global parser below skips already-parsed bodies.
+app.use('/api/admin/blog', express.json({ limit: '15mb' }));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
@@ -122,8 +126,19 @@ app.use('/api/billing', billingRoutes);
 app.use('/api/tickets', ticketRoutes);
 app.use('/api/feedback', feedbackRoutes);
 
+const blogRoutes = require('./routes/blog');
+app.use('/api/blog', blogRoutes.publicRouter);
+app.use('/api/admin/blog', blogRoutes.adminRouter);
+
 const adminRoutes = require('./routes/admin');
 app.use('/api/admin', adminRoutes);
+
+// Uploaded blog images. CORP is relaxed so the site (another origin) can show them.
+const path = require('path');
+app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads'), {
+  maxAge: '30d',
+  setHeaders: (res) => res.set('Cross-Origin-Resource-Policy', 'cross-origin'),
+}));
 
 // Root health check for platforms that ping /
 app.get('/', (req, res) => {

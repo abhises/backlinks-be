@@ -1,0 +1,787 @@
+{
+ "home": {
+  "eyebrow": "SERPsupport blog",
+  "h1": "Link building, explained by people who do it daily.",
+  "intro": "Guides, data and playbooks on earning backlinks, guest posting, niche edits and keeping your link profile clean. Written by the SERPsupport outreach and SEO team."
+ },
+ "pillars": [
+  {
+   "title": "Footprint-free link building",
+   "href": "/blog/footprint-free-link-building"
+  },
+  {
+   "title": "Guest posting from first pitch to live link",
+   "href": "/blog/category/guest-posting"
+  },
+  {
+   "title": "Niche edits: the full playbook",
+   "href": "/blog/category/niche-edits"
+  },
+  {
+   "title": "Anchor text strategy",
+   "href": "/blog/anchor-text-ratios-2026"
+  },
+  {
+   "title": "Internal linking for linked pages",
+   "href": "/blog/internal-linking-for-pages-with-backlinks"
+  },
+  {
+   "title": "Backlink monitoring setup",
+   "href": "/blog/why-backlinks-disappear"
+  }
+ ],
+ "categories": [
+  {
+   "slug": "link-building",
+   "name": "Link Building",
+   "h1": "Link building guides",
+   "intro": "Strategies for earning backlinks that hold up: finding relevant sites, avoiding reciprocal footprints, and building a profile search engines read as natural."
+  },
+  {
+   "slug": "guest-posting",
+   "name": "Guest Posting",
+   "h1": "Guest posting",
+   "intro": "How to pitch, write and place guest posts on sites your audience already reads, and how to judge whether a site is worth the effort."
+  },
+  {
+   "slug": "niche-edits",
+   "name": "Niche Edits",
+   "h1": "Niche edits",
+   "intro": "Getting links added to existing, already-ranking content: where to look, what to ask for and how to choose anchors."
+  },
+  {
+   "slug": "technical-seo",
+   "name": "Technical SEO",
+   "h1": "Technical SEO",
+   "intro": "Crawlability, internal linking, canonicals and the site foundations that decide how much value your backlinks pass."
+  },
+  {
+   "slug": "backlink-monitoring",
+   "name": "Backlink Monitoring",
+   "h1": "Backlink monitoring",
+   "intro": "Tracking live links, catching removals and nofollow changes, and following up with site owners before rankings move."
+  },
+  {
+   "slug": "case-studies",
+   "name": "Case Studies",
+   "h1": "Case studies",
+   "intro": "Real campaigns from SERPsupport members, with the placements, timelines and ranking changes that followed."
+  }
+ ],
+ "authors": [
+  {
+   "slug": "maya-lindqvist",
+   "name": "Maya Lindqvist",
+   "initials": "ML",
+   "role": "Head of Outreach, SERPsupport",
+   "bio": "Head of Outreach at SERPsupport. Eight years running link campaigns for SaaS and e-commerce brands, with 3,000+ placements negotiated directly with site owners."
+  },
+  {
+   "slug": "daniel-okafor",
+   "name": "Daniel Okafor",
+   "initials": "DO",
+   "role": "Technical SEO, SERPsupport",
+   "bio": "Technical SEO at SERPsupport. Focuses on crawlability, internal linking and making sure earned links pass value to the pages that matter."
+  },
+  {
+   "slug": "priya-raman",
+   "name": "Priya Raman",
+   "initials": "PR",
+   "role": "Content Lead, SERPsupport",
+   "bio": "Content Lead at SERPsupport. Writes and edits guest posts across the network and runs our pitch and vetting playbooks."
+  }
+ ],
+ "posts": [
+  {
+   "slug": "footprint-free-link-building",
+   "category": "link-building",
+   "title": "Footprint-free link building: how to earn backlinks without reciprocal swaps",
+   "excerpt": "Why A↔B swaps leave traces, and a repeatable process for placements that hold up.",
+   "description": "A practical guide to building a natural link profile: what search engines flag as a link scheme, why A↔B swaps leave traces, and a repeatable process for placements that hold up.",
+   "author": "maya-lindqvist",
+   "reviewer": "daniel-okafor",
+   "published": "2026-09-14",
+   "updated": "2026-11-02",
+   "readMinutes": 12,
+   "featured": true,
+   "coverCaption": "A network link graph compared with a two-site swap.",
+   "takeaways": [
+    "Direct A↔B link exchanges create a pattern that is easy to detect at scale.",
+    "Natural profiles have links flowing in from sites you never link back to.",
+    "Approve each placement on relevance, traffic and topical fit, not domain rating alone.",
+    "Monitor every live link; around 1 in 10 placements change within a year."
+   ],
+   "body": [
+    {
+     "type": "p",
+     "text": "Most link building advice still boils down to “trade links with sites in your niche.” It works for a while. Then a manual review, an algorithm update, or a competitor’s audit surfaces the pattern, and the links stop counting."
+    },
+    {
+     "type": "p",
+     "text": "This guide covers how search engines read link exchanges, what a natural profile looks like, and a step-by-step process for earning placements that survive scrutiny. If you are new to the topic, start with our [link building guides](/blog/category/link-building)."
+    },
+    {
+     "type": "h2",
+     "id": "what-is",
+     "text": "What is a link footprint?"
+    },
+    {
+     "type": "p",
+     "text": "A link footprint is any repeatable signal that connects a group of links to a single arrangement. Reciprocal links between two domains, identical anchor text across unrelated sites, and clusters of links published in the same week are all common footprints."
+    },
+    {
+     "type": "h2",
+     "id": "why-swaps",
+     "text": "Why reciprocal swaps get flagged"
+    },
+    {
+     "type": "p",
+     "text": "Search engine guidelines list “excessive link exchanges” as a link scheme. A single swap between two related sites is normal. The problem is volume and symmetry."
+    },
+    {
+     "type": "h3",
+     "text": "Swaps compared with network placements"
+    },
+    {
+     "type": "table",
+     "head": [
+      "Signal",
+      "A↔B swap",
+      "Network placement"
+     ],
+     "rows": [
+      [
+       "Link direction",
+       "Both ways",
+       "One way"
+      ],
+      [
+       "Detectable pattern",
+       "High",
+       "Low"
+      ],
+      [
+       "Topical relevance",
+       "Often forced",
+       "Chosen per placement"
+      ],
+      [
+       "Approval",
+       "Implicit",
+       "Explicit, per link"
+      ]
+     ]
+    },
+    {
+     "type": "h2",
+     "id": "natural-profile",
+     "text": "What a natural link profile looks like"
+    },
+    {
+     "type": "p",
+     "text": "Natural profiles are uneven. Links arrive from sites of different sizes, at irregular intervals, with anchors that describe the content rather than repeat a keyword."
+    },
+    {
+     "type": "quote",
+     "text": "If every link on your profile has a twin pointing back, you don’t have a profile. You have a ledger.",
+     "cite": "Daniel Okafor, Technical SEO"
+    },
+    {
+     "type": "related",
+     "slug": "anchor-text-ratios-2026"
+    },
+    {
+     "type": "h2",
+     "id": "process",
+     "text": "A 5-step process for footprint-free links",
+     "toc": "A 5-step process"
+    },
+    {
+     "type": "steps",
+     "items": [
+      [
+       "Define the pages that need links",
+       "Pick 3–5 commercial or pillar pages. Links to the homepage alone rarely move rankings."
+      ],
+      [
+       "Find topically relevant sites",
+       "Shortlist sites that already write about your topic and have real organic traffic."
+      ],
+      [
+       "Talk to the site owner directly",
+       "Agree placement type, anchor and target page in one conversation."
+      ],
+      [
+       "Approve or reject each placement",
+       "Accept only links that fit the page. Never give a link back to the same site."
+      ],
+      [
+       "Monitor and follow up",
+       "Check status weekly for the first month and resolve removals quickly."
+      ]
+     ]
+    },
+    {
+     "type": "figure",
+     "label": "Approval queue",
+     "caption": "The approval queue in SERPsupport. Each request shows niche, DR and placement type."
+    },
+    {
+     "type": "h2",
+     "id": "monitoring",
+     "text": "Monitoring links after they go live"
+    },
+    {
+     "type": "p",
+     "text": "Links change. Pages get redesigned, posts get pruned, and editors switch links to nofollow. Check every placement on a schedule and follow up within a week when something changes. Our guide to [why backlinks disappear](/blog/why-backlinks-disappear) covers the setup in detail."
+    }
+   ],
+   "faqs": [
+    [
+     "Are reciprocal links bad for SEO?",
+     "An occasional link between two related sites is normal. Large numbers of direct A↔B exchanges are listed as a link scheme in search engine guidelines and can be discounted or penalised."
+    ],
+    [
+     "How many backlinks do I need to rank?",
+     "It depends on the competition for the query. Compare the number of referring domains pointing at the pages currently ranking, and focus on relevance over raw count."
+    ],
+    [
+     "Should I use exact-match anchor text?",
+     "Sparingly. Most natural profiles are dominated by branded and URL anchors. Use descriptive partial-match anchors where they read naturally in the sentence."
+    ],
+    [
+     "How often should I check my backlinks?",
+     "Check new placements weekly for the first month, then monthly. SERPsupport checks every placement automatically and alerts you on removals or nofollow changes."
+    ]
+   ],
+   "sources": [
+    {
+     "label": "Google Search Central — Spam policies: link spam",
+     "href": "https://developers.google.com/search/docs/essentials/spam-policies#link-spam"
+    }
+   ],
+   "tags": [
+    "link-schemes",
+    "reciprocal-links",
+    "anchor-text",
+    "outreach"
+   ]
+  },
+  {
+   "slug": "pitch-a-guest-post-editors-reply-to",
+   "category": "guest-posting",
+   "title": "How to pitch a guest post editors actually reply to",
+   "excerpt": "Pitch structure, topic selection and the follow-up timing that gets replies.",
+   "description": "How to write a guest post pitch editors reply to: choosing a topic the site is missing, keeping the pitch short, and following up without being ignored.",
+   "author": "priya-raman",
+   "published": "2026-10-30",
+   "readMinutes": 9,
+   "takeaways": [
+    "Pitch a specific headline that fills a gap on the site, not a vague topic.",
+    "Keep the first email under 120 words with one clear ask.",
+    "Follow up once, around five working days later, then move on."
+   ],
+   "body": [
+    {
+     "type": "p",
+     "text": "Editors receive far more guest post pitches than they can read. The ones that get replies are short, specific and clearly written for that site."
+    },
+    {
+     "type": "h2",
+     "id": "pick-topic",
+     "text": "Pick a topic the site is missing"
+    },
+    {
+     "type": "p",
+     "text": "Search the site for your topic before you write anything. If they already cover it well, pitch a narrower angle or a follow-up. A pitch that fills a visible gap is easier to say yes to."
+    },
+    {
+     "type": "h2",
+     "id": "structure",
+     "text": "A pitch structure that works"
+    },
+    {
+     "type": "steps",
+     "items": [
+      [
+       "One line on who you are",
+       "Your role and one relevant credential. Skip the life story."
+      ],
+      [
+       "The proposed headline",
+       "A finished, specific headline rather than a topic area."
+      ],
+      [
+       "Why it fits their readers",
+       "Reference an existing article it would complement."
+      ],
+      [
+       "Two or three outline points",
+       "Enough to show substance without writing the post in the email."
+      ]
+     ]
+    },
+    {
+     "type": "h2",
+     "id": "follow-up",
+     "text": "Follow-up timing"
+    },
+    {
+     "type": "p",
+     "text": "Send one polite follow-up about five working days after the first email. If there is still no reply, move on. Repeated chasing rarely changes the answer. On SERPsupport the conversation happens in chat with the site owner, so you can see when a request has been read."
+    }
+   ],
+   "tags": [
+    "guest-posts",
+    "outreach"
+   ]
+  },
+  {
+   "slug": "niche-edits-vs-guest-posts",
+   "category": "niche-edits",
+   "title": "Niche edits vs guest posts: which placement fits your page?",
+   "excerpt": "A decision framework based on page age, existing traffic and topical overlap.",
+   "description": "Niche edits or guest posts? A simple decision framework based on page age, existing traffic and topical overlap with the page you want to rank.",
+   "author": "daniel-okafor",
+   "published": "2026-10-22",
+   "readMinutes": 8,
+   "takeaways": [
+    "Niche edits add a link to a page that already exists and may already rank.",
+    "Guest posts give you control over the surrounding content and anchor context.",
+    "Choose based on the linking page, not on which placement type is cheaper."
+   ],
+   "body": [
+    {
+     "type": "p",
+     "text": "Both placement types can work. The right choice depends on the page that will hold your link and how closely it matches the page you want to rank."
+    },
+    {
+     "type": "h2",
+     "id": "compare",
+     "text": "How the two compare"
+    },
+    {
+     "type": "table",
+     "head": [
+      "Factor",
+      "Niche edit",
+      "Guest post"
+     ],
+     "rows": [
+      [
+       "Page age",
+       "Existing, often indexed",
+       "New"
+      ],
+      [
+       "Existing traffic",
+       "Possible from day one",
+       "Builds over time"
+      ],
+      [
+       "Control over context",
+       "Limited",
+       "High"
+      ],
+      [
+       "Effort",
+       "Low",
+       "Writing required"
+      ]
+     ]
+    },
+    {
+     "type": "h2",
+     "id": "when-niche-edit",
+     "text": "When a niche edit is the better fit"
+    },
+    {
+     "type": "p",
+     "text": "Choose a niche edit when an existing page already covers your topic closely and has organic traffic. The link fits naturally into content that search engines already trust."
+    },
+    {
+     "type": "h2",
+     "id": "when-guest-post",
+     "text": "When a guest post is the better fit"
+    },
+    {
+     "type": "p",
+     "text": "Choose a guest post when no existing page is a close match, or when you need the surrounding paragraphs to explain why the link is there. See our [guest posting guides](/blog/category/guest-posting) for pitching and vetting."
+    }
+   ],
+   "tags": [
+    "niche-edits",
+    "guest-posts"
+   ]
+  },
+  {
+   "slug": "why-backlinks-disappear",
+   "category": "backlink-monitoring",
+   "title": "Why 1 in 10 backlinks disappear within a year",
+   "excerpt": "What we learned from monitoring live placements across the network.",
+   "description": "Why backlinks get removed or changed to nofollow, how often it happens, and how to set up monitoring so you can follow up before rankings move.",
+   "author": "maya-lindqvist",
+   "published": "2026-10-15",
+   "readMinutes": 7,
+   "takeaways": [
+    "Most lost links come from redesigns, content pruning and editorial changes, not bad faith.",
+    "A link switched to nofollow is easy to miss without automated checks.",
+    "Following up within a week recovers far more links than waiting a month."
+   ],
+   "body": [
+    {
+     "type": "p",
+     "text": "A live link is not a permanent link. Pages are redesigned, posts are merged or deleted, and editors change link attributes. If you are not checking, you usually find out when rankings drop."
+    },
+    {
+     "type": "h2",
+     "id": "causes",
+     "text": "Common reasons links disappear"
+    },
+    {
+     "type": "ul",
+     "items": [
+      "Site redesigns that drop old content or change URLs without redirects.",
+      "Content pruning, where low-traffic posts are removed or merged.",
+      "Editorial policy changes that switch outbound links to nofollow or sponsored.",
+      "Domain expiry or a change of site owner."
+     ]
+    },
+    {
+     "type": "h2",
+     "id": "monitoring-setup",
+     "text": "A simple monitoring setup"
+    },
+    {
+     "type": "p",
+     "text": "Check new placements weekly for the first month and monthly after that. Track three things for each link: whether the page returns 200, whether the link is still present, and whether its rel attribute has changed."
+    },
+    {
+     "type": "h2",
+     "id": "follow-up",
+     "text": "Following up"
+    },
+    {
+     "type": "p",
+     "text": "When a link changes, contact the site owner quickly and politely. Most removals are accidental. SERPsupport checks every placement automatically and alerts you so you can reply in the same chat where the link was agreed."
+    }
+   ],
+   "tags": [
+    "monitoring",
+    "lost-links"
+   ]
+  },
+  {
+   "slug": "internal-linking-for-pages-with-backlinks",
+   "category": "technical-seo",
+   "title": "Internal linking for pages that receive backlinks",
+   "excerpt": "Pass the value of every new link to the pages you actually want to rank.",
+   "description": "How to use internal links to pass the value of new backlinks from the pages that receive them to the pages you want to rank.",
+   "author": "daniel-okafor",
+   "published": "2026-10-08",
+   "readMinutes": 10,
+   "takeaways": [
+    "Backlinks often land on blog posts, not on the commercial pages you want to rank.",
+    "Contextual internal links from linked pages pass that value onward.",
+    "Use descriptive anchors and keep important pages within a few clicks of the homepage."
+   ],
+   "body": [
+    {
+     "type": "p",
+     "text": "Many sites earn links to their guides and research, then wonder why their product pages do not move. Internal linking is how you connect the two."
+    },
+    {
+     "type": "h2",
+     "id": "find-pages",
+     "text": "Find the pages that receive links"
+    },
+    {
+     "type": "p",
+     "text": "Export the pages on your site with the most referring domains. These are the pages with the most value to pass on."
+    },
+    {
+     "type": "h2",
+     "id": "add-links",
+     "text": "Add contextual internal links"
+    },
+    {
+     "type": "p",
+     "text": "From each linked page, add one or two links to the commercial or pillar pages they relate to. Place them in the body text where they help the reader, with anchors that describe the destination page."
+    },
+    {
+     "type": "h2",
+     "id": "check",
+     "text": "Check crawl depth"
+    },
+    {
+     "type": "p",
+     "text": "Pages that are many clicks from the homepage are crawled less often. Keep the pages you want to rank within three clicks, and make sure none of them are orphaned. For choosing which pages to build links to, see [footprint-free link building](/blog/footprint-free-link-building)."
+    }
+   ],
+   "tags": [
+    "internal-links",
+    "technical-seo"
+   ]
+  },
+  {
+   "slug": "anchor-text-ratios-2026",
+   "category": "link-building",
+   "title": "Anchor text ratios in 2026: what a natural mix looks like",
+   "excerpt": "Branded, partial-match and naked URL anchors, and how to balance them.",
+   "description": "How to balance branded, partial-match, exact-match and naked URL anchor text so your backlink profile reads as natural.",
+   "author": "priya-raman",
+   "published": "2026-09-29",
+   "readMinutes": 11,
+   "takeaways": [
+    "Natural profiles are dominated by branded and URL anchors.",
+    "Exact-match anchors should be rare and placed only where they read naturally.",
+    "Look at the pages that already rank for your query before choosing a target mix."
+   ],
+   "body": [
+    {
+     "type": "p",
+     "text": "There is no single correct anchor text ratio. There is, however, a clear difference between profiles that look earned and profiles that look engineered."
+    },
+    {
+     "type": "h2",
+     "id": "types",
+     "text": "Anchor text types"
+    },
+    {
+     "type": "table",
+     "head": [
+      "Type",
+      "Example",
+      "Typical share"
+     ],
+     "rows": [
+      [
+       "Branded",
+       "SERPsupport",
+       "Largest"
+      ],
+      [
+       "Naked URL",
+       "serpsupport.com",
+       "Large"
+      ],
+      [
+       "Partial match",
+       "a backlink exchange platform",
+       "Moderate"
+      ],
+      [
+       "Generic",
+       "this guide",
+       "Moderate"
+      ],
+      [
+       "Exact match",
+       "backlink exchange",
+       "Small"
+      ]
+     ]
+    },
+    {
+     "type": "h2",
+     "id": "benchmark",
+     "text": "Benchmark against what already ranks"
+    },
+    {
+     "type": "p",
+     "text": "Pull the anchor text distribution for the pages ranking for your target query. Your mix does not need to match theirs exactly, but large deviations, especially toward exact match, are worth avoiding."
+    },
+    {
+     "type": "h2",
+     "id": "in-practice",
+     "text": "Choosing anchors in practice"
+    },
+    {
+     "type": "p",
+     "text": "Agree the anchor with the site owner per placement and let it fit the sentence. When in doubt, use your brand name or a descriptive phrase. See [footprint-free link building](/blog/footprint-free-link-building) for the wider process."
+    }
+   ],
+   "tags": [
+    "anchor-text"
+   ]
+  },
+  {
+   "slug": "saas-case-study-referring-domains",
+   "category": "case-studies",
+   "title": "Building a SaaS link profile without a single swap",
+   "excerpt": "How a budgeting app grew referring domains through one-way placements.",
+   "description": "A SaaS case study: how a budgeting app grew its link profile through one-way guest posts and niche edits, without reciprocal swaps.",
+   "author": "maya-lindqvist",
+   "published": "2026-09-20",
+   "readMinutes": 6,
+   "takeaways": [
+    "Links were targeted at four feature pages, not just the homepage.",
+    "Every placement was one-way and approved individually.",
+    "Internal links from the blog passed value on to the feature pages."
+   ],
+   "body": [
+    {
+     "type": "p",
+     "text": "This case study follows a budgeting app that wanted to rank its feature pages for competitive comparison queries without relying on link swaps."
+    },
+    {
+     "type": "h2",
+     "id": "approach",
+     "text": "The approach"
+    },
+    {
+     "type": "steps",
+     "items": [
+      [
+       "Choose target pages",
+       "Four feature pages with clear commercial intent."
+      ],
+      [
+       "Shortlist relevant sites",
+       "Personal finance blogs and fintech news sites with organic traffic."
+      ],
+      [
+       "Mix placement types",
+       "Guest posts where context mattered, niche edits on existing ranking pages."
+      ],
+      [
+       "Monitor every link",
+       "Weekly checks for the first month, then monthly."
+      ]
+     ]
+    },
+    {
+     "type": "h2",
+     "id": "lessons",
+     "text": "What we learned"
+    },
+    {
+     "type": "p",
+     "text": "Relevance mattered more than domain rating. Placements on smaller, closely related sites were the ones that stayed live and sent referral traffic. Read the [process behind it](/blog/footprint-free-link-building)."
+    }
+   ],
+   "tags": [
+    "case-study",
+    "saas"
+   ]
+  },
+  {
+   "slug": "vet-a-site-before-guest-posting",
+   "category": "guest-posting",
+   "title": "How to vet a site before you accept a guest post",
+   "excerpt": "Traffic trends, outbound link density and the red flags we reject on sight.",
+   "description": "A checklist for vetting a website before a guest post: traffic trends, topical relevance, outbound link density and common red flags.",
+   "author": "priya-raman",
+   "published": "2026-09-03",
+   "readMinutes": 7,
+   "takeaways": [
+    "Check the traffic trend, not just the current number.",
+    "High outbound link density across many unrelated topics is a warning sign.",
+    "If the site publishes anything for anyone, a link there is worth little."
+   ],
+   "body": [
+    {
+     "type": "p",
+     "text": "A link is only as useful as the site it sits on. A few minutes of vetting avoids placements that bring no value or actively look manipulative."
+    },
+    {
+     "type": "h2",
+     "id": "checklist",
+     "text": "The vetting checklist"
+    },
+    {
+     "type": "ul",
+     "items": [
+      "Organic traffic is stable or growing over the last 12 months.",
+      "The site covers topics related to yours.",
+      "Recent posts have a reasonable number of outbound links.",
+      "Content is written for readers, not stuffed with commercial anchors.",
+      "There is a real editorial team or owner you can talk to."
+     ]
+    },
+    {
+     "type": "h2",
+     "id": "red-flags",
+     "text": "Red flags we reject on sight"
+    },
+    {
+     "type": "p",
+     "text": "“Write for us” pages listing every niche, sharp traffic drops, and archives full of unrelated sponsored posts. On SERPsupport you can reject any connection request that does not meet your bar."
+    }
+   ],
+   "tags": [
+    "guest-posts",
+    "site-vetting"
+   ]
+  },
+  {
+   "slug": "niche-edit-opportunities-search-operators",
+   "category": "niche-edits",
+   "title": "Finding niche edit opportunities with search operators",
+   "excerpt": "Queries that surface ranking pages with room for one more link.",
+   "description": "How to use search operators to find existing pages that are a good fit for a niche edit link.",
+   "author": "daniel-okafor",
+   "published": "2026-08-27",
+   "readMinutes": 8,
+   "takeaways": [
+    "Start from the topic of your target page, not from a list of sites.",
+    "Operators like intitle: and inurl: narrow results to closely related pages.",
+    "Prefer pages that already rank and have been updated recently."
+   ],
+   "body": [
+    {
+     "type": "p",
+     "text": "The best niche edit opportunities are pages that already cover your topic and would genuinely be improved by a link to your resource."
+    },
+    {
+     "type": "h2",
+     "id": "operators",
+     "text": "Useful search operators"
+    },
+    {
+     "type": "table",
+     "head": [
+      "Operator",
+      "Example",
+      "Use"
+     ],
+     "rows": [
+      [
+       "intitle:",
+       "intitle:\"budgeting apps\"",
+       "Pages focused on the topic"
+      ],
+      [
+       "inurl:",
+       "inurl:resources budgeting",
+       "Resource and link pages"
+      ],
+      [
+       "site:",
+       "site:example.com budgeting",
+       "Search one site"
+      ],
+      [
+       "-site:",
+       "budgeting guide -site:yoursite.com",
+       "Exclude your own site"
+      ]
+     ]
+    },
+    {
+     "type": "h2",
+     "id": "qualify",
+     "text": "Qualify the page"
+    },
+    {
+     "type": "p",
+     "text": "Check that the page ranks, that it was updated recently, and that a link to your page would help its readers. Then contact the owner with a specific suggestion for where the link fits. Compare approaches in [niche edits vs guest posts](/blog/niche-edits-vs-guest-posts)."
+    }
+   ],
+   "tags": [
+    "niche-edits",
+    "search-operators"
+   ]
+  }
+ ]
+}

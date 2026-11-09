@@ -6,3 +6,9 @@ node_modules
 
 # Local SQLite dev database — never deploy/commit this
 dev.db
+
+# Blog image uploads (live on the server, not in git)
+/uploads
+
+# Local .env backups (contain secrets)
+.env.bak*

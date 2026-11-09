@@ -169,3 +169,93 @@ model Feedback {
 
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
+
+// ─── Blog ─────────────────────────────────────────────────────────────────
+
+model BlogCategory {
+  id        String     @id @default(uuid())
+  slug      String     @unique
+  name      String
+  h1        String     @default("")
+  intro     String     @db.Text
+  sortOrder Int        @default(0)
+  posts     BlogPost[]
+}
+
+model BlogAuthor {
+  id          String     @id @default(uuid())
+  slug        String     @unique
+  name        String
+  role        String     @default("")
+  bio         String     @db.Text
+  avatarUrl   String?    @db.VarChar(1000)
+  linkedinUrl String?    @db.VarChar(1000)
+  sortOrder   Int        @default(0)
+  posts       BlogPost[] @relation("PostAuthor")
+  reviewed    BlogPost[] @relation("PostReviewer")
+}
+
+model BlogPost {
+  id             String        @id @default(uuid())
+  slug           String        @unique
+  status         String        @default("DRAFT") // DRAFT | PUBLISHED
+  featured       Boolean       @default(false)
+  title          String        @db.VarChar(300)
+  excerpt        String        @db.Text
+  description    String        @db.Text // dek under the H1, also the meta description fallback
+  seoTitle       String?       @db.VarChar(300)
+  seoDescription String?       @db.Text
+  coverImage     String?       @db.VarChar(1000)
+  coverAlt       String?       @db.VarChar(500)
+  coverCaption   String?       @db.Text
+  customCss      String?       @db.Text // extra CSS for this post's page
+  jsonLd         String?       @db.Text // extra structured data (JSON) added to the page
+  readMinutes    Int?
+  takeaways      Json          // string[]
+  body           Json          // Block[]
+  faqs           Json          // [question, answer][]
+  sources        Json          // { label, href }[]
+  tags           Json          // string[]
+  categoryId     String?
+  authorId       String?
+  reviewerId     String?
+  publishedAt    DateTime?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  category       BlogCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  author         BlogAuthor?   @relation("PostAuthor", fields: [authorId], references: [id], onDelete: SetNull)
+  reviewer       BlogAuthor?   @relation("PostReviewer", fields: [reviewerId], references: [id], onDelete: SetNull)
+
+  @@index([status, publishedAt])
+}
+
+model BlogMedia {
+  id        String   @id @default(uuid())
+  url       String   @db.VarChar(1000)
+  key       String?  @db.VarChar(500) // S3 object key, or "local:<file>" in development
+  filename  String
+  mimeType  String
+  size      Int
+  alt       String   @default("")
+  createdAt DateTime @default(now())
+}
+
+model BlogSettings {
+  id              String   @id @default("singleton")
+  eyebrow         String   @default("SERPsupport blog")
+  h1              String   @default("Link building, explained by people who do it daily.")
+  intro           String   @db.Text
+  seoTitle        String   @default("SERPsupport Blog — Link building guides, guest posting & SEO")
+  seoDescription  String   @db.Text
+  pillarsTitle    String   @default("Pillar guides")
+  pillarsText     String   @default("Long-form guides that every article in the category links back to.")
+  pillars         Json     // { title, href }[]
+  ctaTitle        String   @default("Build links without the swap trail.")
+  ctaText         String   @default("Chat with site owners and approve every placement. 7-day free trial.")
+  ctaButton       String   @default("Create account →")
+  newsletterTitle String   @default("One link building idea, every other Tuesday.")
+  newsletterText  String   @default("New guides and placement data from the SERPsupport network. No spam, unsubscribe anytime.")
+  customCss       String?  @db.Text // CSS added to every blog page
+  updatedAt       DateTime @updatedAt
+}

@@ -1,4 +1,5 @@
 const cheerio = require('cheerio');
+const { safeFetch } = require('./safeFetch');
 
 // Common vocabulary markers for heuristic text classification if HTML tags are missing/unclear
 const VOCAB_MARKERS = {
@@ -20,46 +21,41 @@ const verifyWorkspaceLanguage = async (domain, claimedLanguage) => {
   let url = `https://${cleanDomain}`;
   let html = null;
 
-  try {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 8000);
+  // Domain is user-supplied, so fetch through safeFetch: public addresses only,
+  // checked redirects, capped body size and a hard timeout (SSRF protection).
+  const fetchOpts = {
+    headers: {
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 SERPsupport-AuditBot/1.0'
+    },
+  };
 
-    let res = await fetch(url, {
-      method: 'GET',
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 SERPsupport-AuditBot/1.0'
-      },
-      signal: controller.signal
-    }).catch(async (e) => {
+  try {
+    let res;
+    try {
+      res = await safeFetch(url, fetchOpts);
+    } catch (e) {
+      if (e.code === 'EBLOCKEDADDRESS') throw e;
       // Fallback to http if https fails
       url = `http://${cleanDomain}`;
-      return await fetch(url, {
-        method: 'GET',
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 SERPsupport-AuditBot/1.0'
-        },
-        signal: controller.signal
-      });
-    });
+      res = await safeFetch(url, fetchOpts);
+    }
 
-    clearTimeout(timeout);
-
-    if (!res || !res.ok) {
+    if (!res.ok) {
       return {
         verificationStatus: 'FAILED',
         detectedLanguage: null,
         hreflangTags: null,
-        verificationNotes: `HTTP status ${res ? res.status : 'error'} while inspecting ${cleanDomain}`
+        verificationNotes: `HTTP status ${res.status} while inspecting ${cleanDomain}`
       };
     }
 
-    html = await res.text();
+    html = res.text;
   } catch (error) {
     return {
       verificationStatus: 'FAILED',
       detectedLanguage: null,
       hreflangTags: null,
-      verificationNotes: `Could not reach ${cleanDomain}: ${error.name === 'AbortError' ? 'Connection timed out' : error.message}`
+      verificationNotes: `Could not reach ${cleanDomain}: ${error.name === 'AbortError' ? 'Connection timed out' : error.code === 'EBLOCKEDADDRESS' ? 'address is not publicly reachable' : error.message}`
     };
   }
 

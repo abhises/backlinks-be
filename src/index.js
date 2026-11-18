@@ -71,7 +71,8 @@ app.post('/api/billing/webhook', express.raw({ type: 'application/json' }), bill
 app.use('/api/admin/blog', express.json({ limit: '15mb' }));
 
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// No urlencoded parser: the API only accepts JSON, so plain HTML forms posted
+// from other sites (CSRF) get no parsed body. Auth cookies are also SameSite=Lax.
 app.use(cookieParser());
 
 // Health check

@@ -244,16 +244,18 @@ const updateThreadStatus = async (req, res) => {
       }
     }
 
+    // Only the owner fields needed for the notification email are loaded. Never
+    // load the full user row here: it would leak password hashes and reset tokens.
+    const ownerSelect = {
+      where: { role: 'OWNER' },
+      select: { user: { select: { name: true, email: true, language: true } } },
+    };
     const updated = await prisma.exchangeThread.update({
       where: { id: req.params.id },
       data: updateData,
       include: {
-        giverWorkspace: {
-          include: { teamMembers: { where: { role: 'OWNER' }, include: { user: true } } }
-        },
-        receiverWorkspace: {
-          include: { teamMembers: { where: { role: 'OWNER' }, include: { user: true } } }
-        },
+        giverWorkspace: { include: { teamMembers: ownerSelect } },
+        receiverWorkspace: { include: { teamMembers: ownerSelect } },
       },
     });
 
@@ -285,7 +287,18 @@ const updateThreadStatus = async (req, res) => {
       });
     }
 
-    res.json({ thread: updated });
+    // Owner emails were only needed server-side; send back names only.
+    const publicOwners = (ws) => ({
+      ...ws,
+      teamMembers: (ws.teamMembers || []).map(m => ({ user: { name: m.user?.name } })),
+    });
+    res.json({
+      thread: {
+        ...updated,
+        giverWorkspace: publicOwners(updated.giverWorkspace),
+        receiverWorkspace: publicOwners(updated.receiverWorkspace),
+      },
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Server error' });

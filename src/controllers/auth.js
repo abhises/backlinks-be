@@ -4,6 +4,17 @@ const crypto = require('crypto');
 const prisma = require('../lib/prisma');
 const { sendWelcomeEmail, sendPasswordResetEmail } = require('../lib/email');
 
+// OAuth client ID(s) the frontend's Google sign-in uses (public values, not secrets).
+// Override with GOOGLE_CLIENT_ID (comma-separated for several).
+const signSession = (user) => jwt.sign(
+  { userId: user.id, email: user.email, name: user.name, role: user.role, language: user.language || 'en', tv: user.tokenVersion || 0 },
+  process.env.JWT_SECRET,
+  { expiresIn: '7d' }
+);
+
+const GOOGLE_CLIENT_IDS = (process.env.GOOGLE_CLIENT_ID || '94623114643-08rm7a6rs2c0cmkpodtmk1o68tookuig.apps.googleusercontent.com')
+  .split(',').map(s => s.trim()).filter(Boolean);
+
 const getLanguageFromReq = (req) => {
   if (req.body && req.body.language) {
     const lang = String(req.body.language).toLowerCase().trim();
@@ -71,17 +82,13 @@ const register = async (req, res) => {
     // Send welcome email asynchronously without blocking registration
     sendWelcomeEmail(user.email, user.name, language).catch(err => console.error('Non-fatal: Error sending welcome email:', err.message || err));
 
-    const token = jwt.sign(
-      { userId: user.id, email: user.email, name: user.name, role: user.role, language: user.language },
-      process.env.JWT_SECRET,
-      { expiresIn: '7d' }
-    );
+    const token = signSession(user);
 
     res.status(201).cookie('token', token, {
       expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
       httpOnly: true,
       secure: true,
-      sameSite: 'none'
+      sameSite: 'lax'
     }).json({
       user: { id: user.id, name: user.name, email: user.email, role: user.role, language: user.language },
     });
@@ -116,17 +123,13 @@ const login = async (req, res) => {
     const domainMismatch = checkDomainMatch(user, req);
     if (domainMismatch) return res.status(403).json(domainMismatch);
 
-    const token = jwt.sign(
-      { userId: user.id, email: user.email, name: user.name, role: user.role, language: user.language || 'en' },
-      process.env.JWT_SECRET,
-      { expiresIn: '7d' }
-    );
+    const token = signSession(user);
 
     res.cookie('token', token, {
       expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
       httpOnly: true,
       secure: true,
-      sameSite: 'none'
+      sameSite: 'lax'
     }).json({
       user: { id: user.id, name: user.name, email: user.email, role: user.role, language: user.language || 'en' },
     });
@@ -144,12 +147,21 @@ const google = async (req, res) => {
 
   try {
     // Verify token with Google's tokeninfo endpoint
-    const response = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${credential}`);
+    const response = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(String(credential))}`);
     if (!response.ok) {
       return res.status(400).json({ error: 'Invalid Google credential' });
     }
 
     const payload = await response.json();
+
+    // The token must have been issued to OUR Google client. Without this check a
+    // token the user gave any other Google-login site could be replayed here.
+    if (!GOOGLE_CLIENT_IDS.includes(payload.aud)) {
+      return res.status(400).json({ error: 'Invalid Google credential' });
+    }
+    if (!['accounts.google.com', 'https://accounts.google.com'].includes(payload.iss)) {
+      return res.status(400).json({ error: 'Invalid Google credential' });
+    }
 
     // Verify email is verified
     if (payload.email_verified !== 'true' && payload.email_verified !== true) {
@@ -184,17 +196,13 @@ const google = async (req, res) => {
     }
 
     // Generate JWT token
-    const token = jwt.sign(
-      { userId: user.id, email: user.email, name: user.name, role: user.role, language: user.language || 'en' },
-      process.env.JWT_SECRET,
-      { expiresIn: '7d' }
-    );
+    const token = signSession(user);
 
     res.cookie('token', token, {
       expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
       httpOnly: true,
       secure: true,
-      sameSite: 'none'
+      sameSite: 'lax'
     }).json({
       user: { id: user.id, name: user.name, email: user.email, role: user.role, language: user.language || 'en' },
     });
@@ -298,6 +306,7 @@ const resetPassword = async (req, res) => {
         hashedPassword,
         resetToken: null,
         resetTokenExpiry: null,
+        tokenVersion: { increment: 1 }, // sign out every existing session
       },
     });
 
@@ -321,17 +330,13 @@ const updateLanguage = async (req, res) => {
       data: { language: cleanLang },
     });
 
-    const token = jwt.sign(
-      { userId: user.id, email: user.email, name: user.name, role: user.role, language: user.language || 'en' },
-      process.env.JWT_SECRET,
-      { expiresIn: '7d' }
-    );
+    const token = signSession(user);
 
     res.cookie('token', token, {
       expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
       httpOnly: true,
       secure: true,
-      sameSite: 'none'
+      sameSite: 'lax'
     }).json({
       user: { id: user.id, name: user.name, email: user.email, role: user.role, language: user.language || 'en' },
     });
@@ -341,12 +346,24 @@ const updateLanguage = async (req, res) => {
   }
 };
 
-const logout = (req, res) => {
+const logout = async (req, res) => {
+  // Revoke the session server-side too (this signs the user out on all devices),
+  // so a copied token stops working instead of living out its 7 days.
+  const token = req.cookies && req.cookies.token;
+  if (token && token !== 'none') {
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      await prisma.user.updateMany({
+        where: { id: decoded.userId, tokenVersion: decoded.tv || 0 },
+        data: { tokenVersion: { increment: 1 } },
+      });
+    } catch { /* expired/invalid token: nothing to revoke */ }
+  }
   res.cookie('token', 'none', {
     expires: new Date(Date.now() + 10 * 1000),
     httpOnly: true,
     secure: true,
-    sameSite: 'none'
+    sameSite: 'lax'
   });
   res.status(200).json({ success: true, message: 'User logged out successfully' });
 };
